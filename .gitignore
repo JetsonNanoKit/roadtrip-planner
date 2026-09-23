@@ -1,0 +1,17 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 运行时产物
+temp_sync_*.md
+public/images/dyn_*.svg
+public/images/ai_*.png
+public/images/test_preview_*.svg
+
+# 日志与依赖（本项目无 npm 依赖，仅为防御性忽略）
+*.log
+node_modules/
+
+# 编辑器
+.vscode/
+.idea/

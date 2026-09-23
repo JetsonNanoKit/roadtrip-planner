@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadTrip Planner - Plan your trip, enjoy on road!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    .markdown-body {
+      color: #1e293b;
+      line-height: 1.75;
+    }
+    .markdown-body h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    .markdown-body h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      border-left: 4px solid #3b82f6;
+      padding-left: 0.75rem;
+    }
+    .markdown-body h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-body h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #475569;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.925rem;
+    }
+    .markdown-body th, .markdown-body td {
+      border: 1px solid #cbd5e1;
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+    }
+    .markdown-body th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: #334155;
+    }
+    .markdown-body tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .markdown-body blockquote {
+      border-left: 4px solid #60a5fa;
+      background-color: #eff6ff;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 0.5rem 0.5rem 0;
+      color: #1e3a8a;
+    }
+    .markdown-body img {
+      max-width: 100%;
+      width: 100%;
+      height: auto;
+      border-radius: 0.75rem;
+      margin: 1.5rem auto;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      display: block;
+    }
+    .markdown-body ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+      margin: 0.75rem 0;
+    }
+    .markdown-body ol {
+      list-style-type: decimal;
+      padding-left: 1.5rem;
+      margin: 0.75rem 0;
+    }
+    .markdown-body hr {
+      border: 0;
+      height: 1px;
+      background: #e2e8f0;
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">RoadTrip Planner</h1>
+            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold">Pro</span>
+          </div>
+          <p class="text-xs font-semibold text-blue-600 tracking-wide uppercase mt-0.5">Plan your trip, enjoy on road!</p>
+        </div>
+      </div>
+
+      <!-- Center Slogan Badge (Visible on desktop) -->
+      <div class="hidden lg:flex items-center space-x-2 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-4 py-1.5 rounded-full border border-blue-100/80">
+        <span class="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
+        <span class="text-sm font-medium text-slate-700">自驾路书智能生成与飞书一站式直连</span>
+      </div>
+
+      <!-- Action Buttons & Feishu Status -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- LLM AI Settings Trigger -->
+        <button onclick="openLLMModal()" class="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 transition-all cursor-pointer">
+          <span id="llm-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span>🤖 AI 模型配置</span>
+        </button>
+
+        <!-- Feishu Status Badge -->
+        <div id="feishu-badge" class="hidden sm:flex items-center space-x-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="feishu-user-name">正在检查飞书...</span>
+        </div>
+
+        <!-- Sync Button -->
+        <button id="sync-feishu-btn" onclick="syncToFeishu()" class="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-sm shadow-blue-500/30 transition-all cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          <span id="sync-btn-text">一键同步到飞书</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Configuration Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 md:p-6 transition-all">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+          </svg>
+          <h2 class="text-base font-bold text-slate-800">定制出行参数 (Trip Configuration)</h2>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="loadChuanxiTemplate()" class="inline-flex items-center space-x-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+            <span>✨ 载入长沙→川西13天经典案例</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">出发地</label>
+          <input id="input-origin" type="text" value="长沙" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">目的地</label>
+          <input id="input-destination" type="text" value="川西" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">总天数</label>
+          <input id="input-days" type="number" value="13" min="1" max="30" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">出行季节/时段</label>
+          <input id="input-season" type="text" value="中秋国庆" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm mt-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">成人人数 (18-59岁)</label>
+          <input id="input-adults" type="number" value="2" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">长辈人数 (60岁以上半价/免票)</label>
+          <input id="input-seniors" type="number" value="2" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">儿童人数 (免票/优惠)</label>
+          <input id="input-children" type="number" value="1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">交通车型</label>
+          <select id="input-vehicle" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+            <option value="燃油SUV" selected>燃油 SUV（推荐高原山区）</option>
+            <option value="新能源纯电">新能源纯电（自动规划沿途桩）</option>
+            <option value="插电混动/增程">插电混动 / 增程车</option>
+            <option value="普通燃油轿车">普通燃油轿车</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Illustration Style Selector & AI Image Generation Control -->
+      <div class="mt-5 pt-4 border-t border-slate-100">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-base">🎨</span>
+            <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">插画视觉风格控制 (Illustration Style)</span>
+            <span class="text-[11px] text-slate-400">· 控制路书中的视觉插画生成风格</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <label class="inline-flex items-center text-xs font-semibold text-blue-700 cursor-pointer bg-blue-50/80 hover:bg-blue-100 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors shadow-xs">
+              <input id="auto-image-gen-toggle" type="checkbox" checked onchange="toggleAutoImageGen(this.checked)" class="w-4 h-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500 mr-2 cursor-pointer">
+              <span>✨ 根据攻略实际行程·调用大模型动态生图 (支持 gemini-3.8-flash 等)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Style Cards Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <!-- Card 1: 手绘水彩旅行路书 (Default & Recommended, Watercolor Map) -->
+          <div id="style-card-journal_doodle" onclick="selectImageStyle('journal_doodle')" class="style-card cursor-pointer border-2 border-blue-600 bg-blue-50/60 rounded-xl p-2.5 transition-all shadow-sm hover:shadow-md relative group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-slate-900 flex items-center space-x-1">
+                <span>🗺️</span>
+                <span>手绘水彩旅行路书</span>
+              </span>
+              <span class="text-[10px] bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded-md">同款推荐</span>
+            </div>
+            <div class="h-20 w-full rounded-lg overflow-hidden mb-1.5 bg-slate-100 border border-slate-200/80 relative">
+              <img src="/images/style_handdrawn_journal.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="手绘水彩路书示例">
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2 leading-tight">钢笔勾线、淡彩水彩晕染、微缩半鸟瞰全景、复古罗盘与米黄质感纸</p>
+          </div>
+
+          <!-- Card 2: 复古水彩旅行画报风 -->
+          <div id="style-card-vintage_watercolor" onclick="selectImageStyle('vintage_watercolor')" class="style-card cursor-pointer border-2 border-slate-200 bg-white hover:border-slate-300 rounded-xl p-2.5 transition-all hover:shadow-md relative group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-slate-900 flex items-center space-x-1">
+                <span>🖌️</span>
+                <span>复古水彩画报风</span>
+              </span>
+              <span class="text-[10px] bg-amber-100 text-amber-800 font-semibold px-1.5 py-0.5 rounded-md">典雅</span>
+            </div>
+            <div class="h-20 w-full rounded-lg overflow-hidden mb-1.5 bg-slate-100 border border-slate-200/80 relative">
+              <img src="/images/quanzhou_scenery_1.png" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="水彩画报风示例">
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2 leading-tight">典雅水彩晕染、复古牛皮纸感、细腻建筑写生、地理杂志质感</p>
+          </div>
+
+          <!-- Card 3: 清新吉卜力绘本风 -->
+          <div id="style-card-ghibli_anime" onclick="selectImageStyle('ghibli_anime')" class="style-card cursor-pointer border-2 border-slate-200 bg-white hover:border-slate-300 rounded-xl p-2.5 transition-all hover:shadow-md relative group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-slate-900 flex items-center space-x-1">
+                <span>🌿</span>
+                <span>清新吉卜力绘本</span>
+              </span>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded-md">唯美</span>
+            </div>
+            <div class="h-20 w-full rounded-lg overflow-hidden mb-1.5 bg-slate-100 border border-slate-200/80 relative">
+              <img src="/images/cartoon_yunnan_dali.png" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="吉卜力风示例">
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2 leading-tight">宫崎骏动画治愈感、明媚阳光、蓝天白云、家庭骑行慢游</p>
+          </div>
+
+          <!-- Card 4: 极简扁平现代矢量风 -->
+          <div id="style-card-modern_vector" onclick="selectImageStyle('modern_vector')" class="style-card cursor-pointer border-2 border-slate-200 bg-white hover:border-slate-300 rounded-xl p-2.5 transition-all hover:shadow-md relative group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-slate-900 flex items-center space-x-1">
+                <span>📐</span>
+                <span>现代扁平矢量</span>
+              </span>
+              <span class="text-[10px] bg-indigo-100 text-indigo-800 font-semibold px-1.5 py-0.5 rounded-md">设计感</span>
+            </div>
+            <div class="h-20 w-full rounded-lg overflow-hidden mb-1.5 bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-400">
+              <div class="text-center">
+                <span class="text-2xl">🗺️</span>
+                <span class="block text-[10px] text-slate-400 mt-1">矢量图表</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2 leading-tight">利落几何色块、清新马卡龙配色、现代旅行杂志图解</p>
+          </div>
+        </div>
+
+        <!-- Custom Style Prompt Input (Collapsible/Optional) -->
+        <div class="mt-2.5 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="toggleCustomStyleInput()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-1 cursor-pointer">
+              <span id="custom-style-toggle-icon">＋</span>
+              <span>添加自定义插画修饰词 (Prompt Modifiers)</span>
+            </button>
+            <span id="custom-style-tag" class="hidden text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">已添加修饰词</span>
+          </div>
+          <span class="text-[11px] text-slate-400" id="current-style-hint">当前选用: 🗺️ 手绘水彩旅行路书 (推荐)</span>
+        </div>
+        <div id="custom-style-input-container" class="hidden mt-2">
+          <input id="input-custom-style-prompt" type="text" oninput="onCustomPromptInput(this.value)" placeholder="输入生图风格关键词，如：3D盲盒潮玩风、泡泡玛特质感、或国潮工笔重彩金碧山水..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+        </div>
+      </div>
+
+      <!-- Engine Selector & Action Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-5 pt-4 border-t border-slate-100">
+        <!-- Active LLM Status Badge -->
+        <div class="flex items-center space-x-2 text-xs text-slate-600">
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse mr-2"></span>
+            当前核心引擎: <strong id="current-llm-badge" class="ml-1 text-blue-900 font-bold font-mono">gemini-3.1-pro-preview</strong>
+          </span>
+          <button onclick="openLLMModal()" class="text-slate-500 hover:text-blue-600 underline transition-colors cursor-pointer text-xs">切换/配置模型</button>
+        </div>
+
+        <button id="generate-btn" onclick="triggerGenerateRoadbook()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2">
+          <svg class="w-4 h-4 text-amber-300 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+          </svg>
+          <span id="generate-btn-text">✨ AI 大模型定制专属路书</span>
+        </button>
+      </div>
+
+      <!-- Generating Progress Banner (Hidden by default) -->
+      <div id="gen-progress-banner" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-800">
+        <div class="flex items-center space-x-2">
+          <svg class="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <span id="gen-progress-msg" class="font-medium">正在根据您的参数深度定制结构化自驾路书...</span>
+        </div>
+        <span class="text-slate-400">Plan your trip, enjoy on road!</span>
+      </div>
+    </div>
+
+    <!-- Main Content Area: Dual Pane Editor & Preview -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 flex flex-col h-[780px] overflow-hidden">
+      <!-- Toolbar & Tabs Header -->
+      <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-2">
+          <button id="tab-preview" onclick="switchTab('preview')" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm border border-slate-200/80 transition-all cursor-pointer">
+            📖 图文排版实时预览
+          </button>
+          <button id="tab-editor" onclick="switchTab('editor')" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition-all cursor-pointer">
+            ✏️ Markdown 源码编辑
+          </button>
+          <button id="tab-split" onclick="switchTab('split')" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition-all cursor-pointer">
+            🪟 双栏分屏对照
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="openStyleReGenModal()" class="text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center space-x-1">
+            <span>🎨</span>
+            <span>切换插画风格</span>
+          </button>
+          <button onclick="copyMarkdown()" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <span>复制全文</span>
+          </button>
+          <button onclick="downloadMarkdown()" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            <span>下载 .md</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor & Preview Body -->
+      <div class="flex-1 flex overflow-hidden">
+        <!-- Editor Pane -->
+        <div id="pane-editor" class="w-1/2 h-full border-r border-slate-200 flex flex-col hidden">
+          <textarea id="markdown-input" oninput="onMarkdownChange()" class="flex-1 p-5 font-mono text-xs leading-relaxed text-slate-800 bg-slate-900 text-slate-100 focus:outline-none resize-none selection:bg-blue-600 selection:text-white" placeholder="在此输入或粘贴 Markdown 内容..."></textarea>
+        </div>
+
+        <!-- Preview Pane -->
+        <div id="pane-preview" class="flex-1 h-full overflow-y-auto p-6 md:p-8 bg-white">
+          <!-- Illustration Ribbon -->
+          <div id="illustration-ribbon" class="max-w-4xl mx-auto mb-6 bg-slate-50/90 border border-slate-200/80 rounded-2xl p-4 hidden">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">🎨</span>
+                <span class="text-xs font-bold text-slate-800">本篇定制路书专属手账插画展廊</span>
+                <span id="ribbon-style-badge" class="text-[10px] bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">治愈手账卡通风</span>
+              </div>
+              <span class="text-[11px] text-slate-400">点击小图可放大查看高清大图</span>
+            </div>
+            <div id="ribbon-cards" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+          </div>
+
+          <div id="preview-container" class="markdown-body max-w-4xl mx-auto">
+            <div class="text-center py-20 text-slate-400">
+              <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <p class="font-medium text-slate-500">点击「智能定制专属路书」开始生成</p>
+              <p class="text-xs text-slate-400 mt-1">Plan your trip, enjoy on road!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- LLM AI Configuration Modal -->
+  <div id="llm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🤖</span>
+          <h3 class="text-base font-bold text-slate-900">AI 大模型与生图引擎配置 (LLM & Image AI)</h3>
+        </div>
+        <button onclick="closeLLMModal()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">&times;</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">选择模型提供商 (Provider)</label>
+          <select id="llm-provider" onchange="onProviderChange()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-medium">
+            <option value="meitu" selected>美图 Model Router (内部业务集群 / GLM-4.7 & Gemini)</option>
+            <option value="gemini">Google Gemini (官方 OpenAI 兼容接口 / 推荐)</option>
+            <option value="deepseek">DeepSeek (深度求索 - 高性价比)</option>
+            <option value="kimi">Kimi (Moonshot AI)</option>
+            <option value="qwen">阿里通义千问 (DashScope)</option>
+            <option value="siliconflow">硅基流动 (SiliconFlow)</option>
+            <option value="openai">OpenAI (官方)</option>
+            <option value="ollama">本地 Ollama (本地私有部署)</option>
+            <option value="custom">自定义兼容端点 (Custom)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">API Key</label>
+          <input id="llm-apikey" type="password" placeholder="AIzaSy... 或 sk-..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-mono">
+          <p class="text-[11px] text-slate-400 mt-1">仅保存在您的本地浏览器中，绝不上报云端，安全可靠。</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">文本大模型名称 (Chat Model)</label>
+          <input id="llm-model" type="text" value="GLM-4.7" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-mono">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Base URL (接口地址)</label>
+          <input id="llm-baseurl" type="text" value="http://model-router-biz.meitu.com/v1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-mono">
+          <p class="text-[11px] text-slate-400 mt-1">美图内部业务端点为 <code class="text-blue-600">http://model-router-biz.meitu.com/v1</code> 或公网网关。</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">成本统计标识 (X-Mtcc-Client)</label>
+          <input id="llm-client-header" type="text" value="roadtrip-planner" placeholder="如 roadtrip-planner" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 font-mono">
+          <p class="text-[11px] text-slate-400 mt-1">美图内部 Model Router 成本统计必传 Header（默认：<code class="text-blue-600">roadtrip-planner</code>）。</p>
+        </div>
+
+        <!-- Image Generation Configuration Section -->
+        <div class="border-t border-slate-200/80 pt-3 mt-3 bg-indigo-50/40 p-3 rounded-xl border border-indigo-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-slate-800 flex items-center space-x-1.5">
+              <span>🎨</span>
+              <span>AI 生图模型配置 (Image Generation Engine)</span>
+            </span>
+            <span class="text-[10px] text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-full font-medium">支持 Vertex Express / Gemini / OpenAI 协议</span>
+          </div>
+
+          <div class="space-y-2 mt-2">
+            <div>
+              <label class="block font-bold text-slate-600 mb-0.5">生图模型名称 (Image Model)</label>
+              <div class="flex items-center space-x-2">
+                <input id="image-model" type="text" value="gemini-3.8-flash" placeholder="如 gemini-3.8-flash, dall-e-3, flux-schnell..." class="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-mono text-xs">
+                <select onchange="document.getElementById('image-model').value = this.value" class="bg-slate-100 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 text-[11px] cursor-pointer">
+                  <option value="">快速选择</option>
+                  <option value="gemini-3.8-flash" selected>gemini-3.8-flash (美图路由·动态手账插画)</option>
+                  <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+                  <option value="imagen-3.0-generate-002">imagen-3.0-generate-002 (Vertex)</option>
+                  <option value="dall-e-3">dall-e-3 (OpenAI)</option>
+                  <option value="flux-schnell">flux-schnell</option>
+                  <option value="stable-diffusion-3">stable-diffusion-3</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-600 mb-0.5">生图 Base URL (留空默认继承上方 Base URL)</label>
+              <input id="image-baseurl" type="text" placeholder="留空则复用上方 Base URL，自动调用 /images/generations" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-mono text-xs">
+            </div>
+
+            <!-- Negative Prompt Control -->
+            <div>
+              <div class="flex items-center justify-between mb-0.5">
+                <label class="block font-bold text-slate-600 text-xs">负面提示词 (Negative Prompt · 排除杂乱/3D/写实)</label>
+                <button type="button" onclick="resetNegativePrompt()" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">重置为标准默认</button>
+              </div>
+              <input id="image-negative-prompt" type="text" value="photorealistic, photo, 3d render, CGI, dark lighting, messy sketch, neon colors, modern GPS navigation UI, high contrast, oversaturated, blurry lines, noisy background, abstract" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-mono text-xs">
+              <p class="text-[10px] text-slate-400 mt-0.5">严格滤除写实 3D、CGI、暗光、噪点与现代 GPS 界面干扰</p>
+            </div>
+
+            <!-- Watercolor Trigger Words Helper -->
+            <div class="p-2.5 bg-white/90 rounded-xl border border-slate-200/90 text-xs shadow-2xs">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-bold text-slate-800 flex items-center space-x-1">
+                  <span>✨</span>
+                  <span>手绘水彩路书核心风格词 (Trigger Words)</span>
+                </span>
+                <button type="button" onclick="copyTriggerWords()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center space-x-1">
+                  <span>📋</span>
+                  <span>一键复制风格词</span>
+                </button>
+              </div>
+              <div class="space-y-1 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 font-mono select-all max-h-24 overflow-y-auto leading-relaxed">
+                <p><span class="text-indigo-600 font-bold">媒介:</span> hand-drawn illustrated travel map, delicate black ink outlines, soft watercolor wash, pen and watercolor sketch, textured off-white paper background, whimsical cozy travel journal aesthetic</p>
+                <p><span class="text-blue-600 font-bold">透视:</span> isometric miniature landscape view, panoramic pictorial map, winding scenic highway with arrows and road signs</p>
+                <p><span class="text-emerald-600 font-bold">细节:</span> miniature landmarks, vintage decorative compass rose in corner, botanical border doodles, cute puffy clouds, fresh earthy and pastel color palette, high detail</p>
+              </div>
+            </div>
+
+            <!-- Visual Style Reference Image Card -->
+            <div class="p-3 bg-gradient-to-br from-amber-50/70 to-orange-50/50 rounded-xl border border-amber-200/90 text-xs shadow-2xs">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-amber-950 flex items-center space-x-1.5">
+                  <span>🖼️</span>
+                  <span>生图视觉参考图 (Visual Style Reference)</span>
+                </span>
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200 flex items-center space-x-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>已直传多模态</span>
+                </span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <div class="relative group cursor-pointer shrink-0" onclick="openImageModal('./images/style_reference_watercolor_map.jpg', '手绘水彩路书视觉基准参考图（川西小环线13天自驾路书）', '钢笔微缩手绘全景、低饱和水彩、曲折公路贯穿、8向罗盘、折叠地图与经幡标题栏')">
+                  <img id="style-ref-thumbnail" src="./images/style_reference_watercolor_map.jpg" class="w-24 h-16 object-cover rounded-lg border-2 border-white shadow-sm group-hover:opacity-90 transition-opacity" alt="视觉参考基准">
+                  <div class="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center text-white text-[10px] font-bold">🔍 放大</div>
+                </div>
+                <div class="flex-1 space-y-1">
+                  <p class="font-semibold text-slate-800 text-[11px] leading-tight">《川西小环线13天自驾路书》水彩原图</p>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">大模型（GLM-4.7、Gemini 等）将直接以此图作为 Base64 视觉参考，对齐黑墨勾线、水彩晕染与等轴微缩视角。</p>
+                  <div class="flex items-center space-x-2 pt-0.5">
+                    <label class="text-[10px] bg-white hover:bg-slate-50 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-medium cursor-pointer transition-colors shadow-2xs">
+                      <span>📤 更换参考图</span>
+                      <input type="file" id="custom-ref-image-input" accept="image/*" class="hidden" onchange="handleCustomRefImageUpload(event)">
+                    </label>
+                    <button type="button" onclick="resetDefaultReferenceImage()" class="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer">恢复默认</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] text-slate-500">图片尺寸与比例:</span>
+              <select id="image-size" class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-700 text-xs font-mono">
+                <option value="1792x1024" selected>16:9 横版宽屏 (1792x1024 / 自驾路书推荐)</option>
+                <option value="1024x1024">1:1 正方形 (1024x1024)</option>
+                <option value="1024x1792">9:16 竖版全屏 (1024x1792)</option>
+              </select>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between">
+              <button id="test-image-btn" type="button" onclick="testImageConnection()" class="bg-white hover:bg-slate-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1 cursor-pointer">
+                <span>🎨</span>
+                <span>测试生图连通性</span>
+              </button>
+              <span id="test-image-status" class="text-[11px] text-slate-400"></span>
+            </div>
+
+            <div id="test-image-preview-container" class="hidden mt-2 p-2 bg-white rounded-lg border border-slate-200">
+              <p class="text-[11px] font-bold text-slate-700 mb-1">测试生图效果预览:</p>
+              <img id="test-image-preview-img" src="" class="w-full h-44 object-contain bg-slate-50 border border-slate-100 rounded-md" alt="生图预览">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3 mt-6 pt-3 border-t border-slate-100">
+        <button id="test-llm-btn" onclick="testLLMConnection()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-semibold text-xs transition-colors cursor-pointer">
+          测试文本模型
+        </button>
+        <button onclick="saveLLMConfig()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-semibold text-xs shadow-sm shadow-blue-500/20 transition-colors cursor-pointer text-center">
+          保存所有配置
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style Re-generate / Switch Modal -->
+  <div id="style-switch-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🎨</span>
+          <h3 class="text-base font-bold text-slate-900">切换路书插画风格 (Switch Illustration Style)</h3>
+        </div>
+        <button onclick="closeStyleReGenModal()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-3">您可以直接为当前生成的路书切换不同的插画视觉风格，无需重新等待长文生成。</p>
+
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-2.5">
+          <button type="button" onclick="selectModalStyle('journal_doodle')" id="modal-style-journal_doodle" class="p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/50 text-left transition-all cursor-pointer">
+            <span class="block text-xs font-bold text-slate-900">🗺️ 手绘水彩旅行路书 (推荐)</span>
+            <span class="block text-[11px] text-slate-500 mt-0.5">钢笔勾线淡彩、微缩半鸟瞰全景、质感纸</span>
+          </button>
+          <button type="button" onclick="selectModalStyle('vintage_watercolor')" id="modal-style-vintage_watercolor" class="p-2.5 rounded-xl border-2 border-slate-200 hover:border-slate-300 text-left transition-all cursor-pointer">
+            <span class="block text-xs font-bold text-slate-900">🖌️ 复古水彩画报风</span>
+            <span class="block text-[11px] text-slate-500 mt-0.5">典雅水彩晕染、杂志写生质感</span>
+          </button>
+          <button type="button" onclick="selectModalStyle('ghibli_anime')" id="modal-style-ghibli_anime" class="p-2.5 rounded-xl border-2 border-slate-200 hover:border-slate-300 text-left transition-all cursor-pointer">
+            <span class="block text-xs font-bold text-slate-900">🌿 清新吉卜力绘本</span>
+            <span class="block text-[11px] text-slate-500 mt-0.5">宫崎骏治愈动画感、蓝天白云</span>
+          </button>
+          <button type="button" onclick="selectModalStyle('modern_vector')" id="modal-style-modern_vector" class="p-2.5 rounded-xl border-2 border-slate-200 hover:border-slate-300 text-left transition-all cursor-pointer">
+            <span class="block text-xs font-bold text-slate-900">📐 现代扁平矢量</span>
+            <span class="block text-[11px] text-slate-500 mt-0.5">利落几何信息图、现代旅行设计</span>
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">自定义生图修饰词 (Prompt Modifiers):</label>
+          <input id="modal-custom-style-prompt" type="text" placeholder="如：3D盲盒潮玩风、水墨青绿、油画质感..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono">
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+          <label class="inline-flex items-center cursor-pointer text-slate-700 font-medium">
+            <input id="modal-call-model-toggle" type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 mr-2">
+            <span>调用 AI 生图模型实时重绘新图片</span>
+          </label>
+          <span class="text-[11px] text-slate-400">如未勾选则使用原创对应风格套系</span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3 mt-5 pt-3 border-t border-slate-100">
+        <button onclick="closeStyleReGenModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-semibold text-xs transition-colors cursor-pointer">
+          取消
+        </button>
+        <button id="apply-style-btn" onclick="applySelectedStyle()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-semibold text-xs shadow-sm shadow-blue-500/20 transition-colors cursor-pointer text-center">
+          ✨ 立即应用新风格插画
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feishu Sync Success Modal -->
+  <div id="sync-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1">飞书云文档同步成功！</h3>
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-4">Plan your trip, enjoy on road!</p>
+        <p class="text-sm text-slate-600 mb-6">已通过您的授权账号在飞书云文档空间创建成功，全部章节图表与 4 幅手绘水彩插图已自动完成排版上传。</p>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-6 text-left">
+          <p class="text-xs font-bold text-slate-500 uppercase mb-1">文档标题</p>
+          <p id="modal-doc-title" class="text-sm font-semibold text-slate-800 truncate mb-2"></p>
+          <p class="text-xs font-bold text-slate-500 uppercase mb-1">直达链接</p>
+          <input id="modal-doc-url" type="text" readonly class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-blue-600 font-mono select-all">
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <button onclick="closeModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-semibold text-sm transition-colors cursor-pointer">
+            关闭
+          </button>
+          <a id="modal-open-link" href="#" target="_blank" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-semibold text-sm transition-colors cursor-pointer text-center inline-block shadow-sm shadow-blue-500/20">
+            在飞书中打开 ↗
+          </a>
+        </div>
+      </div>
+  </div>
+  <!-- Image Lightbox Modal with Prompt Inspector -->
+  <div id="image-lightbox-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="closeImageModal()">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200 max-h-[92vh] flex flex-col" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 shrink-0">
+        <div>
+          <h4 id="lightbox-title" class="text-sm font-bold text-slate-900">插画预览</h4>
+          <p id="lightbox-desc" class="text-xs text-slate-500 mt-0.5 truncate"></p>
+        </div>
+        <button onclick="closeImageModal()" class="text-slate-400 hover:text-slate-600 text-xl cursor-pointer leading-none">&times;</button>
+      </div>
+
+      <div class="bg-slate-50 rounded-xl overflow-hidden p-2 flex items-center justify-center flex-1 min-h-0 mb-3 border border-slate-100">
+        <img id="lightbox-img" src="" class="max-w-full max-h-[46vh] object-contain rounded-lg" alt="大图预览">
+      </div>
+
+      <!-- Prompt Inspector Box -->
+      <div id="lightbox-prompt-box" class="shrink-0 bg-slate-50 rounded-xl p-3 border border-slate-200 text-xs space-y-2">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-bold text-slate-700 flex items-center space-x-1">
+              <span>📝</span>
+              <span>生图引导提示词 (Prompt):</span>
+            </span>
+            <button type="button" onclick="copyLightboxPrompt()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center space-x-1">
+              <span>📋</span>
+              <span>复制 Prompt</span>
+            </button>
+          </div>
+          <p id="lightbox-prompt" class="font-mono text-[11px] text-slate-600 bg-white p-2 rounded border border-slate-200 select-all max-h-16 overflow-y-auto leading-relaxed"></p>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-bold text-slate-700 flex items-center space-x-1">
+              <span>🚫</span>
+              <span>负面提示词 (Negative Prompt):</span>
+            </span>
+            <button type="button" onclick="copyLightboxNegativePrompt()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center space-x-1">
+              <span>📋</span>
+              <span>复制 Negative</span>
+            </button>
+          </div>
+          <p id="lightbox-neg-prompt" class="font-mono text-[11px] text-slate-500 bg-white p-2 rounded border border-slate-200 select-all max-h-12 overflow-y-auto leading-relaxed"></p>
+        </div>
+        <div id="lightbox-ref-box" class="flex items-center justify-between pt-2 border-t border-slate-200">
+          <span class="text-[11px] text-slate-600 flex items-center space-x-1.5">
+            <span>🖼️</span>
+            <span>视觉风格基准:</span>
+            <span class="font-semibold text-slate-800">《川西小环线13天自驾路书》水彩原图 (已传模型)</span>
+          </span>
+          <button type="button" onclick="openImageModal('./images/style_reference_watercolor_map.jpg', '手绘水彩路书视觉基准参考图（川西小环线13天自驾路书）', '钢笔勾线、低饱和水彩晕染、微缩等轴全景、8向罗盘')" class="text-[11px] text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center space-x-1">
+            <span>🔍 查看参考原图</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium z-50 transform translate-y-12 opacity-0 transition-all flex items-center space-x-2">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">操作成功</span>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+      <p class="font-medium text-slate-600">RoadTrip Planner · <span class="text-blue-600 font-bold">Plan your trip, enjoy on road!</span></p>
+      <p class="mt-1">Powered by Antigravity & Lark CLI · 为家庭自驾游量身定制</p>
+    </div>
+  </footer>
+
+  <script>
+    let currentDocTitle = "长沙→川西13天自驾路书｜五口之家·中秋国庆·高原慢游版";
+    let currentImageStyle = 'journal_doodle';
+    let customStylePrompt = '';
+    let autoImageGen = false;
+    let modalSelectedStyle = 'journal_doodle';
+
+    const DEFAULT_NEGATIVE_PROMPT = 'photorealistic, photo, 3d render, CGI, dark lighting, messy sketch, neon colors, modern GPS navigation UI, high contrast, oversaturated, blurry lines, noisy background, abstract';
+    const WATERCOLOR_TRIGGER_WORDS = 'hand-drawn illustrated travel map, delicate black ink outlines, soft watercolor wash, pen and watercolor sketch, textured off-white paper background, whimsical cozy travel journal aesthetic, isometric miniature landscape view, panoramic pictorial map, winding scenic highway with arrows and road signs, miniature landmarks, vintage decorative compass rose in corner, botanical border doodles, cute puffy clouds, fresh earthy and pastel color palette (sage green, soft mountain blue, warm ochre, snow white), clean composition, high detail, whimsical pictorial map';
+
+    const STYLE_NAMES = {
+      journal_doodle: '🗺️ 手绘水彩旅行路书 (推荐)',
+      vintage_watercolor: '🖌️ 复古水彩画报风',
+      ghibli_anime: '🌿 清新吉卜力绘本',
+      modern_vector: '📐 现代扁平矢量'
+    };
+
+    const PROVIDER_PRESETS = {
+      meitu: { baseUrl: 'http://model-router-biz.meitu.com/v1', model: 'GLM-4.7', clientHeader: 'roadtrip-planner' },
+      gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-3.1-pro-preview', clientHeader: 'roadtrip-planner' },
+      deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat', clientHeader: 'roadtrip-planner' },
+      kimi: { baseUrl: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k', clientHeader: 'roadtrip-planner' },
+      qwen: { baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus', clientHeader: 'roadtrip-planner' },
+      siliconflow: { baseUrl: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3', clientHeader: 'roadtrip-planner' },
+      openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', clientHeader: 'roadtrip-planner' },
+      ollama: { baseUrl: 'http://localhost:11434/v1', model: 'qwen2.5:7b', clientHeader: 'roadtrip-planner' },
+      custom: { baseUrl: '', model: '', clientHeader: 'roadtrip-planner' }
+    };
+
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      checkFeishuStatus();
+      loadLLMConfigFromStorage();
+      loadSavedStyle();
+      loadChuanxiTemplate();
+    });
+
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      toastMsg.innerText = msg;
+      toastIcon.innerText = icon;
+      toast.classList.remove('translate-y-12', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-12', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    }
+
+    // Style Selector Handlers
+    function selectImageStyle(styleId) {
+      currentImageStyle = styleId;
+      modalSelectedStyle = styleId;
+      localStorage.setItem('roadtrip_image_style', styleId);
+
+      const allCards = ['journal_doodle', 'vintage_watercolor', 'ghibli_anime', 'modern_vector'];
+      allCards.forEach(id => {
+        const card = document.getElementById(`style-card-${id}`);
+        if (card) {
+          if (id === styleId) {
+            card.className = "style-card cursor-pointer border-2 border-blue-600 bg-blue-50/60 rounded-xl p-2.5 transition-all shadow-sm hover:shadow-md relative group";
+          } else {
+            card.className = "style-card cursor-pointer border-2 border-slate-200 bg-white hover:border-slate-300 rounded-xl p-2.5 transition-all hover:shadow-md relative group";
+          }
+        }
+      });
+
+      const hint = document.getElementById('current-style-hint');
+      if (hint) {
+        hint.innerText = `当前选用: ${STYLE_NAMES[styleId] || styleId}`;
+      }
+    }
+
+    function toggleCustomStyleInput() {
+      const container = document.getElementById('custom-style-input-container');
+      const icon = document.getElementById('custom-style-toggle-icon');
+      if (container.classList.contains('hidden')) {
+        container.classList.remove('hidden');
+        if (icon) icon.innerText = '－';
+        document.getElementById('input-custom-style-prompt').focus();
+      } else {
+        container.classList.add('hidden');
+        if (icon) icon.innerText = '＋';
+      }
+    }
+
+    function onCustomPromptInput(val) {
+      customStylePrompt = val.trim();
+      const tag = document.getElementById('custom-style-tag');
+      if (tag) {
+        if (customStylePrompt) {
+          tag.classList.remove('hidden');
+        } else {
+          tag.classList.add('hidden');
+        }
+      }
+    }
+
+    function toggleAutoImageGen(checked) {
+      autoImageGen = checked;
+      localStorage.setItem('roadtrip_auto_image_gen', checked ? 'true' : 'false');
+      if (checked) {
+        showToast('已开启模型生图模式：生成路书时将调用生图模型绘制全新插画', '🎨');
+      } else {
+        showToast('已切换为高质极速插画模式：根据风格精准匹配高清手账插图', '🎒');
+      }
+    }
+
+    function loadSavedStyle() {
+      const savedStyle = localStorage.getItem('roadtrip_image_style');
+      if (savedStyle && STYLE_NAMES[savedStyle]) {
+        selectImageStyle(savedStyle);
+      }
+      const savedAutoGen = localStorage.getItem('roadtrip_auto_image_gen');
+      const toggle = document.getElementById('auto-image-gen-toggle');
+      if (savedAutoGen === 'false') {
+        if (toggle) toggle.checked = false;
+        autoImageGen = false;
+      } else {
+        if (toggle) toggle.checked = true;
+        autoImageGen = true;
+      }
+    }
+
+    // Modal Style Switching
+    function openStyleReGenModal() {
+      modalSelectedStyle = currentImageStyle;
+      selectModalStyle(modalSelectedStyle);
+      const customInput = document.getElementById('modal-custom-style-prompt');
+      if (customInput) customInput.value = customStylePrompt;
+      const callToggle = document.getElementById('modal-call-model-toggle');
+      if (callToggle) callToggle.checked = autoImageGen;
+      document.getElementById('style-switch-modal').classList.remove('hidden');
+    }
+
+    function closeStyleReGenModal() {
+      document.getElementById('style-switch-modal').classList.add('hidden');
+    }
+
+    function selectModalStyle(styleId) {
+      modalSelectedStyle = styleId;
+      const allCards = ['journal_doodle', 'vintage_watercolor', 'ghibli_anime', 'modern_vector'];
+      allCards.forEach(id => {
+        const btn = document.getElementById(`modal-style-${id}`);
+        if (btn) {
+          if (id === styleId) {
+            btn.className = "p-2.5 rounded-xl border-2 border-blue-600 bg-blue-50/50 text-left transition-all cursor-pointer";
+          } else {
+            btn.className = "p-2.5 rounded-xl border-2 border-slate-200 hover:border-slate-300 text-left transition-all cursor-pointer";
+          }
+        }
+      });
+    }
+
+    async function applySelectedStyle() {
+      const origin = document.getElementById('input-origin').value.trim() || '长沙';
+      const destination = document.getElementById('input-destination').value.trim() || '泉州';
+      const days = document.getElementById('input-days').value.trim() || '10';
+      const currentMd = document.getElementById('markdown-input').value;
+      const modalPrompt = document.getElementById('modal-custom-style-prompt').value.trim();
+      const callModel = document.getElementById('modal-call-model-toggle').checked;
+
+      const applyBtn = document.getElementById('apply-style-btn');
+      applyBtn.disabled = true;
+      applyBtn.innerText = callModel ? "🎨 生图模型生成中(约30秒)..." : "应用中...";
+
+      let llmConfig = null;
+      try {
+        const raw = localStorage.getItem('roadtrip_llm_config');
+        if (raw) llmConfig = JSON.parse(raw);
+      } catch (e) {}
+
+      let imageConfig = null;
+      try {
+        const rawImg = localStorage.getItem('roadtrip_image_config');
+        if (rawImg) imageConfig = JSON.parse(rawImg);
+      } catch (e) {}
+      if (imageConfig && !imageConfig.negativePrompt) {
+        imageConfig.negativePrompt = (document.getElementById('image-negative-prompt') ? document.getElementById('image-negative-prompt').value.trim() : '') || DEFAULT_NEGATIVE_PROMPT;
+      }
+
+      try {
+        if (callModel) {
+          // Call image generation endpoint
+          const res = await fetch('/api/generate-images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              origin,
+              destination,
+              days,
+              imageStyle: modalSelectedStyle,
+              customStylePrompt: modalPrompt,
+              imageConfig,
+              apiKey: llmConfig ? llmConfig.apiKey : '',
+              baseUrl: llmConfig ? llmConfig.baseUrl : '',
+              callModel: true
+            })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || '生图失败');
+
+          // Inject into markdown
+          const repRes = await fetch('/api/replace-style', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              markdown: currentMd,
+              origin,
+              destination,
+              imageStyle: modalSelectedStyle,
+              imgSet: data.imgSet
+            })
+          });
+          const repData = await repRes.json();
+          if (repData.ok && repData.markdown) {
+            document.getElementById('markdown-input').value = repData.markdown;
+            renderMarkdown(repData.markdown);
+            if (repData.imgSet) updateIllustrationRibbon(repData.imgSet, modalSelectedStyle);
+            selectImageStyle(modalSelectedStyle);
+            closeStyleReGenModal();
+            showToast(`🎨 已成功调用模型重绘并应用【${STYLE_NAMES[modalSelectedStyle]}】！`);
+          }
+        } else {
+          // Fast replace with matched style assets
+          const repRes = await fetch('/api/replace-style', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              markdown: currentMd,
+              origin,
+              destination,
+              imageStyle: modalSelectedStyle
+            })
+          });
+          const repData = await repRes.json();
+          if (repData.ok && repData.markdown) {
+            document.getElementById('markdown-input').value = repData.markdown;
+            renderMarkdown(repData.markdown);
+            if (repData.imgSet) updateIllustrationRibbon(repData.imgSet, modalSelectedStyle);
+            selectImageStyle(modalSelectedStyle);
+            closeStyleReGenModal();
+            showToast(`✨ 插画风格已即时切换为【${STYLE_NAMES[modalSelectedStyle]}】！`);
+          }
+        }
+      } catch (err) {
+        showToast('更换风格失败: ' + err.message, '❌');
+      } finally {
+        applyBtn.disabled = false;
+        applyBtn.innerText = "✨ 立即应用新风格插画";
+      }
+    }
+
+    // LLM Modal & Storage handling
+    function openLLMModal() {
+      document.getElementById('llm-modal').classList.remove('hidden');
+    }
+    function closeLLMModal() {
+      document.getElementById('llm-modal').classList.add('hidden');
+    }
+
+    function onProviderChange() {
+      const provider = document.getElementById('llm-provider').value;
+      const preset = PROVIDER_PRESETS[provider];
+      if (preset && preset.baseUrl) {
+        document.getElementById('llm-baseurl').value = preset.baseUrl;
+        document.getElementById('llm-model').value = preset.model;
+        if (preset.clientHeader && document.getElementById('llm-client-header')) {
+          document.getElementById('llm-client-header').value = preset.clientHeader;
+        }
+      }
+    }
+
+    function resetNegativePrompt() {
+      const elem = document.getElementById('image-negative-prompt');
+      if (elem) elem.value = DEFAULT_NEGATIVE_PROMPT;
+      showToast('负面提示词已重置为标准默认！');
+    }
+
+    function copyTriggerWords() {
+      navigator.clipboard.writeText(WATERCOLOR_TRIGGER_WORDS).then(() => {
+        showToast('📋 核心风格词库已成功复制到剪贴板！');
+      }).catch(() => {
+        showToast('复制失败，请手动选取复制');
+      });
+    }
+
+    function copyLightboxPrompt() {
+      const text = document.getElementById('lightbox-prompt').innerText;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 生图 Prompt 已复制到剪贴板！');
+      }).catch(() => {
+        showToast('复制失败，请手动选取');
+      });
+    }
+
+    function copyLightboxNegativePrompt() {
+      const text = document.getElementById('lightbox-neg-prompt').innerText;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Negative Prompt 已复制到剪贴板！');
+      }).catch(() => {
+        showToast('复制失败，请手动选取');
+      });
+    }
+
+    let customReferenceImage = null;
+
+    function handleCustomRefImageUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        customReferenceImage = e.target.result;
+        const thumb = document.getElementById('style-ref-thumbnail');
+        if (thumb) thumb.src = customReferenceImage;
+        showToast('✅ 视觉参考图已更新！大模型将以此图作为视觉基准');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetDefaultReferenceImage() {
+      customReferenceImage = null;
+      const thumb = document.getElementById('style-ref-thumbnail');
+      if (thumb) thumb.src = './images/style_reference_watercolor_map.jpg';
+      const fileInput = document.getElementById('custom-ref-image-input');
+      if (fileInput) fileInput.value = '';
+      showToast('已恢复默认参考图（川西小环线13天自驾路书）');
+    }
+
+    function saveLLMConfig() {
+      const clientHeader = (document.getElementById('llm-client-header') ? document.getElementById('llm-client-header').value.trim() : '') || 'roadtrip-planner';
+      const config = {
+        provider: document.getElementById('llm-provider').value,
+        apiKey: document.getElementById('llm-apikey').value.trim(),
+        model: document.getElementById('llm-model').value.trim(),
+        baseUrl: document.getElementById('llm-baseurl').value.trim(),
+        clientHeader: clientHeader
+      };
+      const imageConfig = {
+        imageModel: document.getElementById('image-model').value.trim() || 'gemini-3.8-flash',
+        baseUrl: document.getElementById('image-baseurl').value.trim(),
+        negativePrompt: document.getElementById('image-negative-prompt') ? document.getElementById('image-negative-prompt').value.trim() : DEFAULT_NEGATIVE_PROMPT,
+        clientHeader: clientHeader,
+        size: document.getElementById('image-size').value,
+        referenceImage: customReferenceImage || './images/style_reference_watercolor_map.jpg'
+      };
+      localStorage.setItem('roadtrip_llm_config', JSON.stringify(config));
+      localStorage.setItem('roadtrip_image_config', JSON.stringify(imageConfig));
+      updateLLMStatusBadge(config);
+      closeLLMModal();
+      showToast('AI 模型与生图配置已保存！视觉参考图已生效');
+    }
+
+    function loadLLMConfigFromStorage() {
+      try {
+        const raw = localStorage.getItem('roadtrip_llm_config');
+        if (raw) {
+          const config = JSON.parse(raw);
+          if (config.provider) document.getElementById('llm-provider').value = config.provider;
+          if (config.apiKey) document.getElementById('llm-apikey').value = config.apiKey;
+          if (config.model) document.getElementById('llm-model').value = config.model;
+          if (config.baseUrl) document.getElementById('llm-baseurl').value = config.baseUrl;
+          if (config.clientHeader && document.getElementById('llm-client-header')) {
+            document.getElementById('llm-client-header').value = config.clientHeader;
+          }
+          updateLLMStatusBadge(config);
+        }
+        const rawImg = localStorage.getItem('roadtrip_image_config');
+        if (rawImg) {
+          const imgConfig = JSON.parse(rawImg);
+          if (imgConfig.imageModel) document.getElementById('image-model').value = imgConfig.imageModel;
+          if (imgConfig.baseUrl) document.getElementById('image-baseurl').value = imgConfig.baseUrl;
+          if (imgConfig.negativePrompt && document.getElementById('image-negative-prompt')) {
+            document.getElementById('image-negative-prompt').value = imgConfig.negativePrompt;
+          }
+          if (imgConfig.size) document.getElementById('image-size').value = imgConfig.size;
+          if (imgConfig.referenceImage && imgConfig.referenceImage !== './images/style_reference_watercolor_map.jpg') {
+            customReferenceImage = imgConfig.referenceImage;
+            const thumb = document.getElementById('style-ref-thumbnail');
+            if (thumb) thumb.src = customReferenceImage;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function updateLLMStatusBadge(config) {
+      const dot = document.getElementById('llm-status-dot');
+      const badge = document.getElementById('current-llm-badge');
+      if (config && config.apiKey) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        if (badge) badge.innerText = config.model || '已就绪';
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-slate-400";
+        if (badge) badge.innerText = '待配置 API Key';
+      }
+    }
+
+    async function testLLMConnection() {
+      const apiKey = document.getElementById('llm-apikey').value.trim();
+      const baseUrl = document.getElementById('llm-baseurl').value.trim();
+      const model = document.getElementById('llm-model').value.trim();
+      const clientHeader = (document.getElementById('llm-client-header') ? document.getElementById('llm-client-header').value.trim() : '') || 'roadtrip-planner';
+
+      if (!apiKey) {
+        showToast('请先输入 API Key', '⚠️');
+        return;
+      }
+
+      const testBtn = document.getElementById('test-llm-btn');
+      testBtn.disabled = true;
+      testBtn.innerText = "测试中...";
+
+      try {
+        const res = await fetch('/api/test-llm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey, baseUrl, model, clientHeader })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('✅ 连通测试成功！' + (data.message || '模型响应正常'));
+        } else {
+          showToast('❌ 连通失败: ' + (data.error || '无法访问'), '⚠️');
+        }
+      } catch (err) {
+        showToast('测试出错: ' + err.message, '❌');
+      } finally {
+        testBtn.disabled = false;
+        testBtn.innerText = "测试文本模型";
+      }
+    }
+
+    async function testImageConnection() {
+      const apiKey = document.getElementById('llm-apikey').value.trim();
+      const llmBaseUrl = document.getElementById('llm-baseurl').value.trim();
+      const imageModel = document.getElementById('image-model').value.trim() || 'gemini-3.8-flash';
+      const imageBaseUrl = document.getElementById('image-baseurl').value.trim() || llmBaseUrl;
+      const clientHeader = (document.getElementById('llm-client-header') ? document.getElementById('llm-client-header').value.trim() : '') || 'roadtrip-planner';
+      const size = document.getElementById('image-size').value;
+
+      if (!apiKey) {
+        showToast('请先输入 API Key', '⚠️');
+        return;
+      }
+
+      const testBtn = document.getElementById('test-image-btn');
+      const statusText = document.getElementById('test-image-status');
+      const previewContainer = document.getElementById('test-image-preview-container');
+      const previewImg = document.getElementById('test-image-preview-img');
+
+      testBtn.disabled = true;
+      testBtn.innerText = "生图中...";
+      statusText.innerText = "正在调用生图接口测试...";
+
+      const negativePrompt = (document.getElementById('image-negative-prompt') ? document.getElementById('image-negative-prompt').value.trim() : '') || DEFAULT_NEGATIVE_PROMPT;
+
+      try {
+        const res = await fetch('/api/test-image-gen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            apiKey,
+            baseUrl: imageBaseUrl,
+            imageModel,
+            imageStyle: currentImageStyle,
+            customStylePrompt,
+            clientHeader,
+            negativePrompt,
+            size,
+            referenceImage: customReferenceImage || './images/style_reference_watercolor_map.jpg'
+          })
+        });
+        const data = await res.json();
+        if (data.ok && data.imageUrl) {
+          statusText.innerText = "绘图引擎就绪！";
+          previewImg.src = data.imageUrl;
+          previewContainer.classList.remove('hidden');
+          showToast(`✅ 生图模型 [${imageModel}] 测试成功！视觉参考已对齐`);
+        } else {
+          statusText.innerText = "测试失败";
+          showToast('❌ 生图失败: ' + (data.error || '未能生成图片'), '⚠️');
+        }
+      } catch (err) {
+        statusText.innerText = "请求异常";
+        showToast('生图测试出错: ' + err.message, '❌');
+      } finally {
+        testBtn.disabled = false;
+        testBtn.innerText = "测试生图连通性";
+      }
+    }
+
+    async function checkFeishuStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        const badge = document.getElementById('feishu-badge');
+        const userText = document.getElementById('feishu-user-name');
+        if (data.loggedIn) {
+          userText.innerText = `飞书已连接: ${data.userName || '已授权'}`;
+          badge.className = "hidden sm:flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700";
+        } else {
+          userText.innerText = "飞书未授权";
+          badge.className = "hidden sm:flex items-center space-x-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700";
+        }
+      } catch (err) {
+        console.error('Failed to check feishu status', err);
+      }
+    }
+
+    function openImageModal(url, title, desc, prompt, negPrompt, refImage) {
+      const modal = document.getElementById('image-lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      const titleElem = document.getElementById('lightbox-title');
+      const descElem = document.getElementById('lightbox-desc');
+      const promptElem = document.getElementById('lightbox-prompt');
+      const negPromptElem = document.getElementById('lightbox-neg-prompt');
+      const refBox = document.getElementById('lightbox-ref-box');
+      if (!modal || !img) return;
+      img.src = url;
+      if (titleElem) titleElem.innerText = title || '插画预览';
+      if (descElem) descElem.innerText = desc || '';
+      if (promptElem) {
+        promptElem.innerText = prompt || '（当前插画基于专属路书动态水彩微缩全景矢量引擎生成。若启用 AI 生图模型实时出图，此处将呈现所使用的完整手绘水彩引导 Prompt）';
+      }
+      if (negPromptElem) {
+        negPromptElem.innerText = negPrompt || DEFAULT_NEGATIVE_PROMPT;
+      }
+      if (refBox) {
+        refBox.classList.remove('hidden');
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeImageModal() {
+      const modal = document.getElementById('image-lightbox-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    let currentRibbonItems = [];
+
+    function openRibbonImageModal(index) {
+      const item = currentRibbonItems[index];
+      if (!item) return;
+      const rawUrl = item.data.url || '';
+      const url = rawUrl.replace(/^@\.\/public\//, '/').replace(/^\.\//, '/');
+      const title = item.label;
+      const desc = item.data.desc || item.label;
+      const prompt = item.data.prompt || '';
+      const negPrompt = item.data.negativePrompt || DEFAULT_NEGATIVE_PROMPT;
+      const refImage = (item.data && item.data.referenceImage) || './images/style_reference_watercolor_map.jpg';
+      openImageModal(url, title, desc, prompt, negPrompt, refImage);
+    }
+
+    function updateIllustrationRibbon(imgSet, styleKey) {
+      if (!imgSet) return;
+      const ribbon = document.getElementById('illustration-ribbon');
+      const cards = document.getElementById('ribbon-cards');
+      const badge = document.getElementById('ribbon-style-badge');
+      if (!ribbon || !cards) return;
+
+      if (styleKey && STYLE_NAMES[styleKey]) {
+        badge.innerText = STYLE_NAMES[styleKey];
+      }
+
+      const items = [
+        { key: 'routeMap', label: '🚗 路线手绘水彩地图', data: imgSet.routeMap },
+        { key: 'scenery1', label: '🏔️ 核心自然胜境', data: imgSet.scenery1 },
+        { key: 'scenery2', label: '🏮 特色历史人文', data: imgSet.scenery2 },
+        { key: 'food', label: '🍲 地方非遗美食', data: imgSet.food }
+      ].filter(item => item.data && item.data.url);
+
+      if (items.length === 0) {
+        ribbon.classList.add('hidden');
+        return;
+      }
+
+      currentRibbonItems = items;
+
+      cards.innerHTML = items.map((item, idx) => {
+        const rawUrl = item.data.url || '';
+        const url = rawUrl.replace(/^@\.\/public\//, '/').replace(/^\.\//, '/');
+        const desc = item.data.desc || item.label;
+        return `
+          <div class="group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col" onclick="openRibbonImageModal(${idx})">
+            <div class="h-28 bg-slate-100 overflow-hidden flex items-center justify-center p-1">
+              <img src="${url}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-md" alt="${item.label}">
+            </div>
+            <div class="p-2 text-center bg-white border-t border-slate-100 flex-1 flex flex-col justify-center">
+              <span class="text-[11px] font-bold text-slate-800 block truncate">${item.label}</span>
+              <span class="text-[10px] text-slate-400 block truncate mt-0.5">${desc}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      ribbon.classList.remove('hidden');
+    }
+
+    async function loadChuanxiTemplate() {
+      try {
+        const res = await fetch('/api/templates/chuanxi');
+        const data = await res.json();
+        currentDocTitle = data.title;
+        document.getElementById('input-origin').value = '长沙';
+        document.getElementById('input-destination').value = '泉州';
+        document.getElementById('input-days').value = '10';
+        document.getElementById('input-adults').value = '2';
+        document.getElementById('input-seniors').value = '2';
+        document.getElementById('input-children').value = '1';
+        document.getElementById('markdown-input').value = data.content;
+        renderMarkdown(data.content);
+        if (data.imgSet) {
+          updateIllustrationRibbon(data.imgSet, 'journal_doodle');
+        }
+        switchTab('preview');
+      } catch (err) {
+        showToast('载入初始路书失败: ' + err.message, '❌');
+      }
+    }
+
+    async function triggerGenerateRoadbook() {
+      const origin = document.getElementById('input-origin').value.trim();
+      const destination = document.getElementById('input-destination').value.trim();
+      const days = document.getElementById('input-days').value.trim();
+      const season = document.getElementById('input-season').value.trim();
+      const adults = document.getElementById('input-adults').value.trim();
+      const seniors = document.getElementById('input-seniors').value.trim();
+      const children = document.getElementById('input-children').value.trim();
+      const vehicle = document.getElementById('input-vehicle').value;
+
+      let llmConfig = null;
+      const raw = localStorage.getItem('roadtrip_llm_config');
+      if (raw) {
+        try {
+          llmConfig = JSON.parse(raw);
+        } catch (e) {}
+      }
+
+      if (!llmConfig || !llmConfig.apiKey) {
+        showToast('请先配置大模型 API Key（点击右上角或“切换/配置模型”按钮）', '⚠️');
+        openLLMModal();
+        return;
+      }
+
+      let imageConfig = null;
+      try {
+        const rawImg = localStorage.getItem('roadtrip_image_config');
+        if (rawImg) imageConfig = JSON.parse(rawImg);
+      } catch (e) {}
+
+      if (!imageConfig) {
+        imageConfig = {
+          imageModel: (llmConfig && llmConfig.model) || 'gemini-3.8-flash',
+          baseUrl: (llmConfig && llmConfig.baseUrl) || '',
+          clientHeader: (llmConfig && llmConfig.clientHeader) || 'roadtrip-planner',
+          size: '1792x1024'
+        };
+      }
+      if (!imageConfig.apiKey && llmConfig) {
+        imageConfig.apiKey = llmConfig.apiKey;
+      }
+      if (!imageConfig.baseUrl && llmConfig) {
+        imageConfig.baseUrl = llmConfig.baseUrl;
+      }
+      if (!imageConfig.clientHeader && llmConfig) {
+        imageConfig.clientHeader = llmConfig.clientHeader || 'roadtrip-planner';
+      }
+      if (!imageConfig.negativePrompt) {
+        imageConfig.negativePrompt = (document.getElementById('image-negative-prompt') ? document.getElementById('image-negative-prompt').value.trim() : '') || DEFAULT_NEGATIVE_PROMPT;
+      }
+
+      // UI Loading states
+      const genBtn = document.getElementById('generate-btn');
+      const genBtnText = document.getElementById('generate-btn-text');
+      const progressBanner = document.getElementById('gen-progress-banner');
+      const progressMsg = document.getElementById('gen-progress-msg');
+
+      genBtn.disabled = true;
+      genBtn.classList.add('opacity-75', 'cursor-not-allowed');
+      genBtnText.innerText = "AI 大模型创作中...";
+      progressBanner.classList.remove('hidden');
+
+      const styleName = STYLE_NAMES[currentImageStyle] || currentImageStyle;
+      const messages = [
+        `正在分析从 ${origin} 至 ${destination} 的单日自驾里程与适老宜幼路线...`,
+        `正在根据 ${adults}大 + ${seniors}老 + ${children}小 计算长辈门票半价政策与家庭预算...`,
+        `正在为「${vehicle}」车型规划补能与沿途路况安全保障...`,
+        autoImageGen ? `正在调用生图模型绘制【${styleName}】专属全景插画中...` : `正在生成 ${destination} 专属每日时间轴并动态注入【${styleName}】插画...`
+      ];
+
+      let msgIndex = 0;
+      progressMsg.innerText = messages[0];
+      const intervalId = setInterval(() => {
+        msgIndex = (msgIndex + 1) % messages.length;
+        progressMsg.innerText = messages[msgIndex];
+      }, 2500);
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origin,
+            destination,
+            days,
+            season,
+            adults,
+            seniors,
+            children,
+            vehicle,
+            llmConfig,
+            imageStyle: currentImageStyle,
+            customStylePrompt,
+            autoImageGen,
+            imageConfig
+          })
+        });
+
+        const data = await res.json();
+        clearInterval(intervalId);
+
+        if (data.title && data.content) {
+          currentDocTitle = data.title;
+          document.getElementById('markdown-input').value = data.content;
+          renderMarkdown(data.content);
+          if (data.imgSet) {
+            updateIllustrationRibbon(data.imgSet, data.imageStyle || currentImageStyle);
+          }
+          switchTab('preview');
+          showToast(`🎉 ${llmConfig.model || 'AI 大模型'} 已为您深度定制并匹配【${styleName}】专属插图！`);
+        } else {
+          throw new Error(data.error || '大模型生成失败');
+        }
+      } catch (err) {
+        clearInterval(intervalId);
+        showToast('定制失败: ' + err.message, '❌');
+      } finally {
+        genBtn.disabled = false;
+        genBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        genBtnText.innerText = "✨ AI 大模型定制专属路书";
+        progressBanner.classList.add('hidden');
+      }
+    }
+
+    function onMarkdownChange() {
+      const content = document.getElementById('markdown-input').value;
+      renderMarkdown(content);
+    }
+
+    function renderMarkdown(rawMd) {
+      let webMd = (rawMd || '')
+        .replace(/\]\(\.\/images\//g, '](/images/')
+        .replace(/\]\(@\.\/images\//g, '](/images/')
+        .replace(/\]\(@\.\/public\/images\//g, '](/images/')
+        .replace(/\]\(images\//g, '](/images/');
+
+      const container = document.getElementById('preview-container');
+      container.innerHTML = marked.parse(webMd);
+    }
+
+    function switchTab(mode) {
+      const tabPreview = document.getElementById('tab-preview');
+      const tabEditor = document.getElementById('tab-editor');
+      const tabSplit = document.getElementById('tab-split');
+      const paneEditor = document.getElementById('pane-editor');
+      const panePreview = document.getElementById('pane-preview');
+
+      [tabPreview, tabEditor, tabSplit].forEach(tab => {
+        tab.className = "px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900 transition-all cursor-pointer";
+      });
+
+      if (mode === 'preview') {
+        tabPreview.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm border border-slate-200/80 transition-all cursor-pointer";
+        paneEditor.classList.add('hidden');
+        panePreview.classList.remove('hidden');
+        panePreview.className = "flex-1 h-full overflow-y-auto p-6 md:p-8 bg-white";
+      } else if (mode === 'editor') {
+        tabEditor.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm border border-slate-200/80 transition-all cursor-pointer";
+        panePreview.classList.add('hidden');
+        paneEditor.classList.remove('hidden');
+        paneEditor.className = "flex-1 h-full flex flex-col";
+      } else if (mode === 'split') {
+        tabSplit.className = "px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-blue-600 shadow-sm border border-slate-200/80 transition-all cursor-pointer";
+        paneEditor.classList.remove('hidden');
+        panePreview.classList.remove('hidden');
+        paneEditor.className = "w-1/2 h-full border-r border-slate-200 flex flex-col";
+        panePreview.className = "w-1/2 h-full overflow-y-auto p-6 bg-white";
+      }
+    }
+
+    async function syncToFeishu() {
+      const content = document.getElementById('markdown-input').value;
+      if (!content.trim()) {
+        showToast('路书内容为空，无法同步', '⚠️');
+        return;
+      }
+
+      const syncBtn = document.getElementById('sync-feishu-btn');
+      const btnText = document.getElementById('sync-btn-text');
+
+      syncBtn.disabled = true;
+      syncBtn.classList.add('opacity-75', 'cursor-not-allowed');
+      btnText.innerText = "正在同步上传飞书...";
+
+      try {
+        const res = await fetch('/api/sync-feishu', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: currentDocTitle,
+            content: content
+          })
+        });
+
+        const data = await res.json();
+        if (data.ok && data.docUrl) {
+          document.getElementById('modal-doc-title').innerText = currentDocTitle;
+          document.getElementById('modal-doc-url').value = data.docUrl;
+          document.getElementById('modal-open-link').href = data.docUrl;
+          document.getElementById('sync-modal').classList.remove('hidden');
+          showToast('飞书文档同步成功！');
+        } else {
+          throw new Error(data.error || '同步失败');
+        }
+      } catch (err) {
+        showToast('同步飞书失败: ' + err.message, '❌');
+      } finally {
+        syncBtn.disabled = false;
+        syncBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        btnText.innerText = "一键同步到飞书";
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('sync-modal').classList.add('hidden');
+    }
+
+    function copyMarkdown() {
+      const content = document.getElementById('markdown-input').value;
+      navigator.clipboard.writeText(content).then(() => {
+        showToast('路书 Markdown 已复制到剪贴板');
+      });
+    }
+
+    function downloadMarkdown() {
+      const content = document.getElementById('markdown-input').value;
+      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentDocTitle}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('已开始下载 Markdown 文件');
+    }
+  </script>
+</body>
+</html>
