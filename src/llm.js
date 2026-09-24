@@ -116,8 +116,10 @@ async function callLLM(llmConfig, params) {
   console.log(`[LLM] Calling model ${targetModel} for ${origin} -> ${destination} (${days} days) in style [${styleInfo.name}]...`);
   console.log(`[LLM] Calling ${endpoint} with model ${targetModel}...`);
 
+  // 长文路书生成耗时较长（推理模型先输出长思维链再输出正文），超时上限放宽，支持环境变量覆盖
+  const LLM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 900000; // 默认 15 分钟
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 min timeout
+  const timeoutId = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
 
   let response;
   try {
@@ -135,7 +137,10 @@ async function callLLM(llmConfig, params) {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.6,
-        max_tokens: 16384
+        max_tokens: 16384,
+        // 关键：长文非流式请求会让网关/模型挂起直至 headers 超时（UND_ERR_HEADERS_TIMEOUT）。
+        // 流式响应头即时返回，token 增量到达，彻底规避该问题。
+        stream: true
       }),
       signal: controller.signal
     });
@@ -143,18 +148,64 @@ async function callLLM(llmConfig, params) {
     clearTimeout(timeoutId);
     throw new Error(formatFetchError(err, endpoint));
   }
-  clearTimeout(timeoutId);
 
   if (!response.ok) {
+    clearTimeout(timeoutId);
     const errText = await response.text();
     throw new Error(`LLM API 响应错误 (${response.status}): ${errText}`);
   }
 
-  const json = await response.json();
-  if (json.choices && json.choices[0] && json.choices[0].message) {
-    let result = json.choices[0].message.content.trim();
-    // Strip markdown codeblock wrapper if LLM wrapped whole response
-    result = result.replace(/^```markdown\s*\n/, '').replace(/\n```\s*$/, '');
+  // 流式解析 SSE；若服务端忽略 stream 参数返回普通 JSON，则自动回退
+  let result = '';
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+  if (!contentType.includes('text/event-stream')) {
+    const json = await response.json();
+    clearTimeout(timeoutId);
+    if (json.choices && json.choices[0] && json.choices[0].message) {
+      result = json.choices[0].message.content || '';
+    } else {
+      throw new Error('LLM 返回数据格式不符合预期');
+    }
+  } else {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finished = false;
+    let lastLog = Date.now();
+    while (!finished) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === '[DONE]') { finished = true; break; }
+        try {
+          const chunk = JSON.parse(payload);
+          const choice = chunk.choices && chunk.choices[0];
+          if (choice && choice.delta && choice.delta.content) {
+            result += choice.delta.content;
+          }
+          if (choice && choice.finish_reason) finished = true;
+        } catch (e) { /* 忽略不完整的 JSON 行 */ }
+      }
+      if (Date.now() - lastLog > 30000) {
+        lastLog = Date.now();
+        console.log(`[LLM] Streaming... ${result.length} chars received so far`);
+      }
+    }
+    clearTimeout(timeoutId);
+    if (!result.trim()) {
+      throw new Error('LLM 流式响应未返回有效内容');
+    }
+  }
+
+  result = result.trim();
+  // Strip markdown codeblock wrapper if LLM wrapped whole response
+  result = result.replace(/^```markdown\s*\n/, '').replace(/\n```\s*$/, '');
 
     // Prepare destination image set according to style & autoImageGen toggle
     let finalImgSet = null;
@@ -199,9 +250,6 @@ async function callLLM(llmConfig, params) {
     const titleMatch = result.match(/^#\s+([^\n]+)/);
     const title = titleMatch ? titleMatch[1] : `${origin}→${destination}${days}天自驾路书`;
     return { title, content: result, imgSet: finalImgSet, imageStyle };
-  } else {
-    throw new Error('LLM 返回数据格式不符合预期');
-  }
 }
 
 module.exports = { normalizeEndpoint, callLLM };

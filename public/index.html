@@ -791,6 +791,11 @@
       loadLLMConfigFromStorage();
       loadSavedStyle();
       loadChuanxiTemplate();
+      // 预览区图片加载失败兜底（捕获阶段，覆盖后续动态渲染的图片）
+      const previewContainer = document.getElementById('preview-container');
+      if (previewContainer) {
+        previewContainer.addEventListener('error', handlePreviewImageError, true);
+      }
     });
 
     function showToast(msg, icon = '✅') {
@@ -1345,7 +1350,7 @@
         return `
           <div class="group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col" onclick="openRibbonImageModal(${idx})">
             <div class="h-28 bg-slate-100 overflow-hidden flex items-center justify-center p-1">
-              <img src="${url}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-md" alt="${item.label}">
+              <img src="${url}" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=&quot;text-[11px] text-slate-400 px-2 text-center&quot;>🖼️ 插图加载失败<br>重新生成即可恢复</span>'" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-md" alt="${item.label}">
             </div>
             <div class="p-2 text-center bg-white border-t border-slate-100 flex-1 flex flex-col justify-center">
               <span class="text-[11px] font-bold text-slate-800 block truncate">${item.label}</span>
@@ -1363,9 +1368,9 @@
         const res = await fetch('/api/templates/chuanxi');
         const data = await res.json();
         currentDocTitle = data.title;
-        document.getElementById('input-origin').value = '长沙';
-        document.getElementById('input-destination').value = '泉州';
-        document.getElementById('input-days').value = '10';
+        document.getElementById('input-origin').value = data.origin || '长沙';
+        document.getElementById('input-destination').value = data.destination || '川西';
+        document.getElementById('input-days').value = String(data.days || 13);
         document.getElementById('input-adults').value = '2';
         document.getElementById('input-seniors').value = '2';
         document.getElementById('input-children').value = '1';
@@ -1444,6 +1449,7 @@
 
       const styleName = STYLE_NAMES[currentImageStyle] || currentImageStyle;
       const messages = [
+        `⏳ 长篇路书创作通常需要 5~10 分钟（含 AI 思维链推理），请耐心等待，勿重复点击...`,
         `正在分析从 ${origin} 至 ${destination} 的单日自驾里程与适老宜幼路线...`,
         `正在根据 ${adults}大 + ${seniors}老 + ${children}小 计算长辈门票半价政策与家庭预算...`,
         `正在为「${vehicle}」车型规划补能与沿途路况安全保障...`,
@@ -1518,6 +1524,18 @@
 
       const container = document.getElementById('preview-container');
       container.innerHTML = marked.parse(webMd);
+    }
+
+    // 预览区图片加载失败兜底：替换为占位块而不是显示裂图
+    // 使用捕获阶段监听，确保在 <img> 触发 error 时一定能接到
+    function handlePreviewImageError(e) {
+      const img = e.target;
+      if (!img || img.tagName !== 'IMG' || img.dataset.fallbackApplied) return;
+      img.dataset.fallbackApplied = '1';
+      const ph = document.createElement('div');
+      ph.className = 'my-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-400 text-sm flex items-center justify-center h-40';
+      ph.innerText = '🖼️ 插图暂时无法显示（源文件缺失或已被清理），重新生成路书即可恢复';
+      img.replaceWith(ph);
     }
 
     function switchTab(mode) {

@@ -20,7 +20,8 @@ function serveStatic(pathname, res) {
     return send404(res);
   }
 
-  const baseName = relPath === '/' ? 'index.html' : relPath;
+  // path.resolve 遇到以 / 开头的段会丢弃前面的目录，因此必须先去掉前导斜杠再拼接到 PUBLIC_DIR
+  const baseName = relPath === '/' ? 'index.html' : relPath.replace(/^\/+/, '');
   const filePath = path.resolve(PUBLIC_DIR, baseName);
 
   // 关键防护：解析后的绝对路径必须仍位于 PUBLIC_DIR 之内
