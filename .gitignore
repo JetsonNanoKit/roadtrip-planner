@@ -6,6 +6,7 @@ Thumbs.db
 temp_sync_*.md
 public/images/dyn_*.svg
 public/images/ai_*.png
+public/images/ai_*.svg
 public/images/test_preview_*.svg
 
 # 日志与依赖（本项目无 npm 依赖，仅为防御性忽略）
