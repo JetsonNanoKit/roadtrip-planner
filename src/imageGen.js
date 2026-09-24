@@ -316,23 +316,46 @@ async function callImageGenerationAPI({
   }
 
   console.log(`[ImageGen Multimodal LLM] Calling ${chatEndpoint} with model ${model} (refImage attached: ${Boolean(refImage)})...`);
-  const svgSystemPrompt = `You are a master watercolor travel book illustrator and visual cartographer.
-Create a complete, visually stunning standalone vector SVG illustration matching the "Hand-drawn Watercolor Travel Itinerary Map" style.
+  const svgSystemPrompt = `You are a master hand-drawn watercolor travel-book illustrator and pictorial map artist.
+Your task: create ONE rich, dense, hand-painted watercolor "road trip route map" (出游路线手绘地图) as a standalone SVG, closely imitating the provided reference image's art style, composition density and charm.
 
-STRICT VISUAL AESTHETICS (Imitate the provided style reference image):
-1. Medium & Texture: Delicate black ink outlines (pen and watercolor sketch stroke="#2B3A42"), soft watercolor wash fills, subtle off-white textured paper (#FAF7F0 or #FDFBF7), low-saturation earthy & pastel color palette (sage green #8FA89B, mountain blue #6B8E9B, warm ochre #C68B59, terracotta #D9826C, snow white #FAF8F5).
-2. Composition & Perspective: Isometric miniature landscape view (微缩半鸟瞰等轴视角), winding scenic highway/path connecting landmarks with directional arrows (➔) and road shields (G318, G350).
-3. Core Elements: Miniature landmarks (snow-capped mountain with white peaks, ancient stone pavilions with flying eaves, arched bridges, conifer pine trees, cute yellow SUV with roof luggage), vintage decorative 8-point compass rose in corner, botanical border doodles, cute soft puffy watercolor clouds, hand-lettered badge tags.
-4. Negative Constraints: Strictly avoid photorealistic, photo, 3d render, CGI, dark lighting, messy sketch, neon colors, modern GPS navigation UI, high contrast, oversaturated.
-5. Technical: Root element <svg viewBox="0 0 1200 675" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">. Fully valid XML SVG with <defs>, <linearGradient>, <filter>, <path>, <rect>, <circle>, <polygon>, <text>, <g>.
-6. Output: Output ONLY the complete <svg>...</svg> code inside \`\`\`xml or \`\`\`svg codeblock. No extra explanations.
-7. TOKEN BUDGET (critical): the output token limit is finite. Keep the SVG COMPACT so it never gets cut off mid-tag — use at most ~50 elements, prefer <circle>/<rect>/<polygon>/<line> over long <path> data, limit gradients and filters to the few essential ones, and keep decorative detail restrained. A complete smaller SVG is far better than a truncated elaborate one.`;
+ART STYLE RULES (must imitate the reference image):
+1. Medium & Line: hand-drawn pen-and-ink outlines (dark ink #2B3A42, slightly wobbly organic strokes, NOT mathematically perfect), filled with soft translucent watercolor washes on warm cream textured paper (#FAF7F0).
+2. Palette: low-saturation earthy pastels — sage green #8FA89B, mountain blue #6B8E9B, warm ochre #C68B59, terracotta #D9826C, autumn orange #D98E4A, snow white #FAF8F5.
+3. Watercolor feel (critical): fake real watercolor with SVG filters — paper grain via feTurbulence + feDisplacementMap, wobbly ink edges via small feDisplacementMap on outline groups, layered wash shapes at 30-60% opacity for depth, soft feathered wash edges via feGaussianBlur. The result must feel hand-painted, NOT flat vector.
+4. Density (critical): the map must be RICH and FULL like the reference image — background layered mountain ranges (3-4 receding layers, snowcaps on high peaks), a winding double-line road with directional arrows and highway shields, EVERY stop on the itinerary gets its own miniature landmark vignette (ancient pavilions with flying eaves, pagodas, stone towers, arched bridges, lakes/rivers, temples, old streets, local food stalls, famous statues or mascots of that place), clusters of pine trees and autumn trees along the route, drifting hand-drawn clouds, a vintage 8-point compass rose (top-left), decorative flowers/leaves/plants framing the corners, a cute small car with luggage driving on the road, and bilingual (Chinese + English) hand-lettered label badges with location pins for every stop.
+5. Composition: panoramic pictorial map; origin on the left, destination on the right; the route winds across the whole canvas through all stops in order; a hand-lettered ribbon title banner at the top.
+6. Negative: strictly NO photorealism, NO 3D render, NO neon colors, NO dark UI panels, NO modern GPS navigation look, NO plain flat minimalist vector style.
+7. Technical: root element <svg viewBox="0 0 1600 900" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">. Fully valid XML with <defs> (gradients + watercolor filters), <g>, <path>, <rect>, <circle>, <ellipse>, <polygon>, <text> (font-family="PingFang SC, Microsoft YaHei, sans-serif"). Chinese text must render correctly (no escaped entities needed beyond XML basics). Do NOT use XML comments anywhere.
+8. Output: output ONLY the complete <svg>...</svg> code inside a single \`\`\`svg codeblock. No planning, no commentary, no explanations before or after the codeblock — nothing but the SVG. You have a large token budget (32k) — use it: richness and completeness matter far more than brevity. Do NOT stop early; if detail must be sacrificed, sacrifice minor decorations, never the route, stops, landmarks or title.`;
 
-// 截断 SVG 修复：去掉末尾半个标签，用栈补全未闭合的元素，最后闭合 </svg>
+// 截断/脏输出 SVG 修复：
+// 0) 先剥离 markdown 围栏与纯散文行（思考型模型爱在输出里夹带计划废话）；
+// 1) 若任意位置出现过 </svg>（模型在中间闭合后又写了废话），截取到第一个 </svg> 为止；
+// 2) 真正被截断时：去掉末尾半个标签，用栈补全未闭合的元素，最后闭合 </svg>；
+// 3) 清洗：删除 XML 注释（注释内禁止出现 --），转义裸 &。
 function repairTruncatedSvg(text) {
-  let svg = text.slice(text.indexOf('<svg'));
+  // 0) 只保留含 '<' 的行（标签行），丢弃 markdown 围栏（含围栏内的内容）与纯散文行
+  let inFence = false;
+  const markupLines = text.split('\n').filter(line => {
+    const t = line.trim();
+    if (t.startsWith('```')) { inFence = !inFence; return false; }
+    if (inFence || !t) return false;
+    return t.includes('<');
+  });
+  text = markupLines.join('\n');
+
+  const start = text.indexOf('<svg');
+  if (start < 0) return null;
+  let svg = text.slice(start);
+  const firstClose = svg.indexOf('</svg>');
+  if (firstClose >= 0) {
+    return svg.slice(0, firstClose + '</svg>'.length);
+  }
   // 去掉末尾未写完的半个标签（如 `<rect x="12` 或孤立的 `<`）
   svg = svg.replace(/<[^<>]*$/, '');
+  // 若遗留未闭合的属性引号（散文行被抽掉导致），截掉这个残标签
+  svg = svg.replace(/<[a-zA-Z][\w:-]*(?:\s+[\w:-]*=(?:"[^"]{0,200}|'[^']{0,200}))?\s*$/, '');
   // 栈式扫描，记录未闭合的开启标签
   const stack = [];
   const tagRe = /<\/?([a-zA-Z][\w:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
@@ -355,20 +378,22 @@ function repairTruncatedSvg(text) {
   return svg;
 }
 
+// SVG 清洗：1) 删除 XML 注释（模型爱在注释里写 ----，而 XML 注释禁止出现 --）；
+// 2) 把不是合法实体的裸 & 转成 &amp;（text/attribute 通用）
+function sanitizeSvgEntities(svg) {
+  return svg
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+}
+
   const userContent = [
     {
       type: 'text',
-      text: `You are provided with a visual style reference image ('川西小环线13天自驾路书' hand-drawn watercolor travel map).
-Please carefully examine the reference image's visual style:
-- Pen and black ink outlines (#2B3A42) with soft watercolor washes
-- Textured cream / off-white paper tone (#FAF7F0)
-- Isometric miniature panorama perspective
-- Winding highway connecting key stops with directional arrows (➔) and road shields (G318, G350)
-- Miniature landmarks (ancient buildings, snow-capped mountains, turquoise river, cute yellow SUV with luggage)
-- Vintage 8-point decorative compass rose in corner, delicate botanical doodles
-- Clean bilingual badge tags
+      text: `The attached image is a style reference: a rich hand-drawn watercolor Chinese road-trip route map ('川西小环线13天自驾路书').
+Study its density and charm: layered mountains with snowcaps, a winding road with arrows and highway shields, every stop drawn as its own miniature landmark vignette, pine and autumn trees, clouds, a vintage compass rose, corner botanical decorations, a cute car with luggage, and bilingual hand-lettered label badges with pins.
 
-Now, create a complete standalone vector SVG illustration that strictly imitates this reference image's visual art style, color tones, and composition for the following road trip highlight:
+Now read the following complete road trip itinerary (full text), and draw ONE route map in exactly this reference style — show EVERY stop in order with its characteristic landmark, the road winding from origin to destination, and a hand-lettered title banner:
+
 ${prompt}
 
 Negative Constraints: ${negativePrompt}`
@@ -385,7 +410,7 @@ Negative Constraints: ${negativePrompt}`
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120000);
+  const timeoutId = setTimeout(() => controller.abort(), 300000); // 精细插画耗时较长，放宽至 5 分钟
 
   let res;
   try {
@@ -403,7 +428,7 @@ Negative Constraints: ${negativePrompt}`
           { role: 'user', content: userContent }
         ],
         temperature: 0.3,
-        max_tokens: 16384
+        max_tokens: 32768
       }),
       signal: controller.signal
     });
@@ -431,10 +456,15 @@ Negative Constraints: ${negativePrompt}`
       // 输出被 max_tokens 截断：修复后兜底解析
       console.warn('[ImageGen Multimodal LLM] SVG output truncated by token limit, attempting repair');
       const repaired = repairTruncatedSvg(text);
-      svgMatch = repaired.match(/<svg[\s\S]*<\/svg>/i);
+      svgMatch = repaired ? repaired.match(/<svg[\s\S]*<\/svg>/i) : null;
     }
     if (svgMatch) {
-      return `data:image/svg+xml;utf8,${encodeURIComponent(svgMatch[0])}`;
+      const svg = sanitizeSvgEntities(svgMatch[0]);
+      // 质量门：模型偶尔返回 `...` 占位符或极小的应付式 SVG，视为无效走兜底
+      if (svg.length < 1500 || svg.includes('...')) {
+        throw new Error(`LLM 返回的 SVG 无效（${svg.length}B，含占位符），触发兜底`);
+      }
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
     }
   }
   throw new Error('LLM 未能输出有效的 <svg> 矢量插画代码');

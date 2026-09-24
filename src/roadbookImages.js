@@ -129,29 +129,33 @@ async function generateRouteMapImage({ origin, destination, days, imageStyle, cu
   const imagesDir = path.join(PUBLIC_DIR, 'images');
   if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 
-  // 3. 调用生图模型
+  // 3. 调用生图模型（思考型模型输出不稳定，失败自动重试 1 次后再走兜底）
   let item = null;
   if (imgApiKey && imageModel) {
-    try {
-      const imgUrl = await callImageGenerationAPI({
-        prompt,
-        imageModel,
-        apiKey: imgApiKey,
-        baseUrl: imgBaseUrl,
-        size: imgSize,
-        negativePrompt,
-        clientHeader,
-        referenceImage: (imageConfig && imageConfig.referenceImage) || null
-      });
-      const savedPath = await downloadAndSaveImage(imgUrl, `ai_${cleanDest}_routeMap_${timestamp}.png`);
-      item = {
-        url: savedPath,
-        alt: `${origin}至${destination}出游路线手绘地图`,
-        desc: `结合全文行程与每个景点特色绘制（途经：${routePointsStr}）`,
-        prompt
-      };
-    } catch (err) {
-      console.warn(`[RouteMap ImageGen Model Fail] Fallback to dynamic SVG:`, err.message);
+    const MAX_ATTEMPTS = 2;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS && !item; attempt++) {
+      try {
+        if (attempt > 1) console.log(`[RouteMap ImageGen] Retry attempt ${attempt}/${MAX_ATTEMPTS}...`);
+        const imgUrl = await callImageGenerationAPI({
+          prompt,
+          imageModel,
+          apiKey: imgApiKey,
+          baseUrl: imgBaseUrl,
+          size: imgSize,
+          negativePrompt,
+          clientHeader,
+          referenceImage: (imageConfig && imageConfig.referenceImage) || null
+        });
+        const savedPath = await downloadAndSaveImage(imgUrl, `ai_${cleanDest}_routeMap_${timestamp}_a${attempt}.png`);
+        item = {
+          url: savedPath,
+          alt: `${origin}至${destination}出游路线手绘地图`,
+          desc: `结合全文行程与每个景点特色绘制（途经：${routePointsStr}）`,
+          prompt
+        };
+      } catch (err) {
+        console.warn(`[RouteMap ImageGen Model Fail attempt ${attempt}/${MAX_ATTEMPTS}]`, err.message);
+      }
     }
   }
 
