@@ -2,7 +2,7 @@
 const { STYLE_DEFINITIONS } = require('./styles');
 const { formatFetchError } = require('./utils');
 const { getDestinationImages, injectDestinationImages } = require('./imageLibrary');
-const { generateRoadbookImages } = require('./roadbookImages');
+const { generateRouteMapImage } = require('./roadbookImages');
 
 // Normalize endpoint for various LLM providers (including Google Gemini OpenAI endpoint)
 function normalizeEndpoint(baseUrl) {
@@ -220,8 +220,8 @@ async function callLLM(llmConfig, params) {
 
     if (autoImageGen !== false) {
       try {
-        console.log(`[LLM] Auto-generating 4 styled images tailored to ${origin} -> ${destination} (${days} days)...`);
-        const generatedImgs = await generateRoadbookImages({
+        console.log(`[LLM] Auto-generating opening route map for ${origin} -> ${destination} (${days} days) from full roadbook text...`);
+        const generatedImgs = await generateRouteMapImage({
           origin,
           destination,
           days,

@@ -1,0 +1,533 @@
+<svg viewBox="0 0 1200 675" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Paper Texture & Watercolor Filters -->
+    <filter id="paper-texture" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+      <feDiffuseLighting in="noise" lighting-color="#FCF9F2" surfaceScale="1.2" result="light">
+        <feDistantLight azimuth="60" elevation="50"/>
+      </feDiffuseLighting>
+      <feBlend mode="multiply" in="SourceGraphic" in2="light"/>
+    </filter>
+
+    <filter id="watercolor-wash" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="fluff"/>
+      <feDisplacementMap in="SourceGraphic" in2="fluff" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <filter id="soft-shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="3" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.18"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="paperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF8F1"/>
+      <stop offset="50%" stop-color="#FAF4E8"/>
+      <stop offset="100%" stop-color="#F6EFE0"/>
+    </linearGradient>
+
+    <linearGradient id="riverGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#A5D8DB" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#7EC4CF" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#5FAFB9" stop-opacity="0.85"/>
+    </linearGradient>
+
+    <linearGradient id="danxiaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D98A72"/>
+      <stop offset="45%" stop-color="#C86D58"/>
+      <stop offset="100%" stop-color="#A35443"/>
+    </linearGradient>
+
+    <linearGradient id="hillGreenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9EBA89"/>
+      <stop offset="60%" stop-color="#7D9F67"/>
+      <stop offset="100%" stop-color="#5E7D4B"/>
+    </linearGradient>
+
+    <linearGradient id="titleWash" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F3DCBA" stop-opacity="0.1"/>
+      <stop offset="20%" stop-color="#F2D1A3" stop-opacity="0.85"/>
+      <stop offset="80%" stop-color="#E8BC84" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#F5E4CE" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <!-- Markers & Pins -->
+    <g id="pin-red">
+      <ellipse cx="0" cy="0" rx="4.5" ry="4.5" fill="#DC4C40" stroke="#FAF8F5" stroke-width="2"/>
+    </g>
+
+    <g id="road-shield">
+      <rect x="-16" y="-9" width="32" height="18" rx="4" fill="#FFFFFF" stroke="#2B3A42" stroke-width="1.3"/>
+      <rect x="-14" y="-7" width="28" height="14" rx="2.5" fill="#F0F4F6"/>
+    </g>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="675" fill="url(#paperGrad)"/>
+
+  <!-- Watercolor Textured Mountain Backdrops / Distant Ridges -->
+  <g id="distant-landscape" filter="url(#watercolor-wash)" opacity="0.55">
+    <!-- Far blue-grey ridges -->
+    <path d="M-20,290 C110,230 220,260 360,210 C500,160 620,220 780,170 C920,120 1060,180 1220,140 L1220,400 L-20,400 Z" fill="#CBD8DA"/>
+    <!-- Mid soft sage-olive ridges -->
+    <path d="M-20,340 C140,290 280,320 450,270 C600,230 750,290 900,230 C1040,190 1150,240 1220,220 L1220,460 L-20,460 Z" fill="#B4CBB7"/>
+    <!-- Warm ochre foothills -->
+    <path d="M-20,420 C160,370 320,410 490,360 C680,310 820,380 990,330 C1120,300 1190,340 1220,330 L1220,530 L-20,530 Z" fill="#DFD2B7"/>
+  </g>
+
+  <!-- Coastal Ocean Wash at Southeast (Quanzhou) -->
+  <g id="ocean-bay">
+    <path d="M880,520 C950,500 1050,510 1220,480 L1220,675 L850,675 C870,620 860,560 880,520 Z" fill="#C3DFE5" opacity="0.6" filter="url(#watercolor-wash)"/>
+    <path d="M920,560 C980,545 1080,550 1220,525 L1220,675 L910,675 Z" fill="#99C9D4" opacity="0.5"/>
+    <!-- Subtle ink wave lines -->
+    <path d="M930,590 C950,585 970,595 990,590 M1020,580 C1045,575 1065,585 1090,580 M1120,570 C1145,565 1170,572 1195,568" stroke="#527B88" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+    <path d="M960,620 C985,615 1010,623 1035,618 M1070,610 C1095,605 1120,612 1145,608" stroke="#527B88" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Waterway: Ganjiang & Jiuqu Stream Features -->
+  <!-- Gan River near Nanchang -->
+  <path d="M320,240 C345,215 360,180 375,130 C390,180 405,210 440,230 C470,250 510,250 540,235" 
+        fill="none" stroke="url(#riverGrad)" stroke-width="16" stroke-linecap="round" filter="url(#watercolor-wash)"/>
+  <path d="M322,238 C346,214 361,180 375,132 C389,180 404,209 438,228 C468,248 508,248 538,234" 
+        fill="none" stroke="#2B3A42" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
+
+  <!-- Jiuqu Stream meander near Wuyishan -->
+  <path d="M630,290 C660,270 680,295 710,280 C735,265 745,230 775,235 C800,240 820,265 850,255" 
+        fill="none" stroke="url(#riverGrad)" stroke-width="14" stroke-linecap="round" filter="url(#watercolor-wash)"/>
+
+  <!-- Winding Main Highway Road (G60 / G70 / G1517 Route) -->
+  <g id="scenic-highway">
+    <!-- Road Underlayer (Casing) -->
+    <path d="M110,480 C170,440 180,360 250,330 C310,305 340,320 410,275 C470,235 520,240 580,280 C640,320 680,350 750,320 C820,290 850,310 885,380 C915,440 940,480 1010,490 C1050,495 1090,475 1120,490" 
+          fill="none" stroke="#FAF8F5" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Road Dark Ink Edges -->
+    <path d="M110,480 C170,440 180,360 250,330 C310,305 340,320 410,275 C470,235 520,240 580,280 C640,320 680,350 750,320 C820,290 850,310 885,380 C915,440 940,480 1010,490 C1050,495 1090,475 1120,490" 
+          fill="none" stroke="#2B3A42" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Road Inner Light Surface -->
+    <path d="M110,480 C170,440 180,360 250,330 C310,305 340,320 410,275 C470,235 520,240 580,280 C640,320 680,350 750,320 C820,290 850,310 885,380 C915,440 940,480 1010,490 C1050,495 1090,475 1120,490" 
+          fill="none" stroke="#E3DEC3" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Road Dashed Centerline -->
+    <path d="M110,480 C170,440 180,360 250,330 C310,305 340,320 410,275 C470,235 520,240 580,280 C640,320 680,350 750,320 C820,290 850,310 885,380 C915,440 940,480 1010,490 C1050,495 1090,475 1120,490" 
+          fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="6 6" stroke-linecap="round"/>
+
+    <!-- Directional Travel Arrows (Red hand-drawn style) -->
+    <!-- Arrow 1: Changsha -> Nanchang -->
+    <path d="M210,365 L225,350 M225,350 L212,347 M225,350 L223,363" stroke="#D34B3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Arrow 2: Nanchang -> Wuyishan -->
+    <path d="M515,252 L532,260 M532,260 L520,265 M532,260 L524,250" stroke="#D34B3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Arrow 3: Wuyishan -> Southeast -->
+    <path d="M800,310 L815,315 M815,315 L804,322 M815,315 L806,306" stroke="#D34B3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Arrow 4: Into Quanzhou -->
+    <path d="M950,470 L965,475 M965,475 L954,482 M965,475 L956,467" stroke="#D34B3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Highway Shields -->
+  <g transform="translate(195, 395)">
+    <use href="#road-shield"/>
+    <text text-anchor="middle" y="3.5" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="7.5" font-weight="bold" fill="#2B3A42">G60</text>
+  </g>
+  <g transform="translate(620, 275)">
+    <use href="#road-shield"/>
+    <text text-anchor="middle" y="3.5" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="7.5" font-weight="bold" fill="#2B3A42">G70</text>
+  </g>
+  <g transform="translate(865, 345)">
+    <use href="#road-shield"/>
+    <text text-anchor="middle" y="3.5" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="7.5" font-weight="bold" fill="#2B3A42">G1517</text>
+  </g>
+
+  <!-- ==================== REGION 1: CHANGSHA (START) ==================== -->
+  <g id="landmark-changsha" transform="translate(0, 0)">
+    <!-- Yuelu Mountain gentle ridge -->
+    <path d="M60,490 Q95,410 135,430 Q170,400 200,460 Z" fill="#90AF86" stroke="#2B3A42" stroke-width="1.5" stroke-linejoin="round" filter="url(#watercolor-wash)"/>
+    <!-- Orange Isle sandbank / Juzizhou -->
+    <path d="M80,500 C110,480 150,485 180,510 C160,525 110,530 80,500 Z" fill="#E8D7A5" stroke="#2B3A42" stroke-width="1.3" stroke-linejoin="round"/>
+    
+    <!-- Aiwan Pavilion / Yuelu ancient pavilion -->
+    <g transform="translate(145, 420)">
+      <!-- Eaves -->
+      <path d="M-18,0 C-10,-5 10,-5 18,0 C12,-3 -12,-3 -18,0 Z" fill="#BA4337" stroke="#2B3A42" stroke-width="1.3"/>
+      <path d="M-14,-2 L-10,-9 L10,-9 L14,-2 Z" fill="#C95B48" stroke="#2B3A42" stroke-width="1.2"/>
+      <path d="M-22,-8 C-12,-16 12,-16 22,-8 C14,-13 -14,-13 -22,-8 Z" fill="#A83226" stroke="#2B3A42" stroke-width="1.3"/>
+      <!-- Finial -->
+      <path d="M0,-16 L0,-20" stroke="#2B3A42" stroke-width="1.5"/>
+      <!-- Pillars -->
+      <line x1="-9" y1="0" x2="-9" y2="12" stroke="#2B3A42" stroke-width="1.5"/>
+      <line x1="-3" y1="0" x2="-3" y2="12" stroke="#2B3A42" stroke-width="1.3"/>
+      <line x1="3" y1="0" x2="3" y2="12" stroke="#2B3A42" stroke-width="1.3"/>
+      <line x1="9" y1="0" x2="9" y2="12" stroke="#2B3A42" stroke-width="1.5"/>
+      <!-- Base plinth -->
+      <rect x="-12" y="12" width="24" height="4" fill="#D2C7B6" stroke="#2B3A42" stroke-width="1.2"/>
+    </g>
+
+    <!-- Maple Trees around Pavilion -->
+    <g transform="translate(115, 440)">
+      <circle cx="0" cy="0" r="9" fill="#D35F47" stroke="#2B3A42" stroke-width="1.2"/>
+      <line x1="0" y1="9" x2="0" y2="15" stroke="#2B3A42" stroke-width="1.3"/>
+    </g>
+    <g transform="translate(180, 445)">
+      <circle cx="0" cy="0" r="7.5" fill="#E28643" stroke="#2B3A42" stroke-width="1.2"/>
+      <line x1="0" y1="7" x2="0" y2="13" stroke="#2B3A42" stroke-width="1.3"/>
+    </g>
+
+    <!-- Cute Changsha Snack doodle: Spicy bowl & milk tea -->
+    <g transform="translate(75, 450)" filter="url(#soft-shadow)">
+      <!-- Bowl of Changsha stinky tofu / chili -->
+      <ellipse cx="0" cy="0" rx="12" ry="7" fill="#E8EDEF" stroke="#2B3A42" stroke-width="1.2"/>
+      <!-- Tofu cubes with chili flakes -->
+      <rect x="-6" y="-5" width="5" height="5" fill="#3D3734" stroke="#2B3A42" stroke-width="0.8"/>
+      <rect x="0" y="-6" width="6" height="5" fill="#3D3734" stroke="#2B3A42" stroke-width="0.8"/>
+      <circle cx="-1" cy="-2" r="1.5" fill="#DC4234"/>
+      <circle cx="3" cy="-3" r="1" fill="#DC4234"/>
+      <path d="M-8,1 C-6,7 6,7 8,1" fill="#FAF6EE" stroke="#2B3A42" stroke-width="1.2"/>
+      <!-- Cute tea cup with straw -->
+      <path d="M14,-8 L20,-8 L18,5 L15,5 Z" fill="#FCEAD2" stroke="#2B3A42" stroke-width="1.1"/>
+      <line x1="18" y1="-12" x2="16" y2="-8" stroke="#D35F47" stroke-width="1.2"/>
+    </g>
+
+    <!-- Changsha Label Badge -->
+    <g transform="translate(110, 550)">
+      <circle cx="-42" cy="-5" r="4.5" fill="#D34B3E" stroke="#FAF8F5" stroke-width="1.5"/>
+      <text x="-32" y="0" font-family="'PingFang SC','STHeiti','Microsoft YaHei',sans-serif" font-size="16" font-weight="bold" fill="#2B3A42">长沙</text>
+      <text x="-32" y="14" font-family="'Helvetica Neue',Arial,sans-serif" font-size="9" font-weight="600" fill="#6A7A82">Changsha (起点)</text>
+      <text x="-32" y="27" font-family="'PingFang SC',sans-serif" font-size="8" fill="#8C7355">岳麓书院 · 橘子洲头</text>
+    </g>
+  </g>
+
+  <!-- ==================== REGION 2: NANCHANG (DAY 1) ==================== -->
+  <g id="landmark-nanchang" transform="translate(380, 160)">
+    <!-- Tengwang Pavilion (Grand ancient multi-tier tower) -->
+    <g transform="translate(30, 45)" filter="url(#soft-shadow)">
+      <!-- Stone Podium -->
+      <polygon points="-30,35 30,35 24,18 -24,18" fill="#B8B2A4" stroke="#2B3A42" stroke-width="1.4"/>
+      <rect x="-6" y="23" width="12" height="12" rx="6" fill="#4A453F" stroke="#2B3A42" stroke-width="1.1"/>
+      
+      <!-- Tier 1 -->
+      <rect x="-18" y="6" width="36" height="12" fill="#BA4C3C" stroke="#2B3A42" stroke-width="1.2"/>
+      <path d="M-28,7 C-16,3 16,3 28,7 C20,3 -20,3 -28,7 Z" fill="#4A7568" stroke="#2B3A42" stroke-width="1.3"/>
+      
+      <!-- Tier 2 -->
+      <rect x="-14" y="-5" width="28" height="11" fill="#BA4C3C" stroke="#2B3A42" stroke-width="1.2"/>
+      <path d="M-24,-4 C-14,-8 14,-8 24,-4 C16,-7 -16,-7 -24,-4 Z" fill="#4A7568" stroke="#2B3A42" stroke-width="1.3"/>
+
+      <!-- Tier 3 (Top eaves with flying corners) -->
+      <rect x="-10" y="-15" width="20" height="10" fill="#99382B" stroke="#2B3A42" stroke-width="1.2"/>
+      <path d="M-20,-14 C-10,-21 10,-21 20,-14 C14,-18 -14,-18 -20,-14 Z" fill="#3D685B" stroke="#2B3A42" stroke-width="1.4"/>
+      <!-- Gilded Finial spire -->
+      <polygon points="0,-27 -3,-21 3,-21" fill="#E2A63B" stroke="#2B3A42" stroke-width="1"/>
+      <line x1="0" y1="-27" x2="0" y2="-21" stroke="#2B3A42" stroke-width="1.2"/>
+      
+      <!-- Plaque -->
+      <rect x="-4" y="-12" width="8" height="4" fill="#1F363D"/>
+    </g>
+
+    <!-- Pine trees on riverbank -->
+    <g transform="translate(-15, 80)">
+      <polygon points="0,-16 -7,0 7,0" fill="#4F795C" stroke="#2B3A42" stroke-width="1.1"/>
+      <polygon points="0,-9 -9,8 9,8" fill="#446C50" stroke="#2B3A42" stroke-width="1.1"/>
+      <line x1="0" y1="8" x2="0" y2="14" stroke="#2B3A42" stroke-width="1.3"/>
+    </g>
+    <g transform="translate(85, 75)">
+      <polygon points="0,-14 -6,0 6,0" fill="#588567" stroke="#2B3A42" stroke-width="1.1"/>
+      <polygon points="0,-7 -8,6 8,6" fill="#446C50" stroke="#2B3A42" stroke-width="1.1"/>
+      <line x1="0" y1="6" x2="0" y2="12" stroke="#2B3A42" stroke-width="1.3"/>
+    </g>
+
+    <!-- Bayi Monument Mini Icon -->
+    <g transform="translate(100, 35)">
+      <polygon points="0,-18 3,-6 3,12 -3,12 -3,-6" fill="#DCE0DE" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Red Star -->
+      <polygon points="0,-14 1.5,-10 5,-10 2,-8 3,-4 0,-6 -3,-4 -2,-8 -5,-10 -1.5,-10" fill="#DC3E32"/>
+    </g>
+
+    <!-- Nanchang Label Badge -->
+    <g transform="translate(25, 115)">
+      <circle cx="-8" cy="-5" r="4.5" fill="#D34B3E" stroke="#FAF8F5" stroke-width="1.5"/>
+      <text x="3" y="0" font-family="'PingFang SC','STHeiti','Microsoft YaHei',sans-serif" font-size="16" font-weight="bold" fill="#2B3A42">南昌</text>
+      <text x="3" y="14" font-family="'Helvetica Neue',Arial,sans-serif" font-size="9" font-weight="600" fill="#6A7A82">Nanchang (Day 1)</text>
+      <text x="3" y="27" font-family="'PingFang SC',sans-serif" font-size="8" fill="#8C7355">滕王阁 · 八一广场</text>
+    </g>
+  </g>
+
+  <!-- ==================== REGION 3: WUYISHAN (DAY 2) ==================== -->
+  <g id="landmark-wuyishan" transform="translate(680, 160)">
+    <!-- Mt. Wuyi Danxia Sandstone Peak (Tianyou Peak) -->
+    <g filter="url(#soft-shadow)">
+      <path d="M40,110 C35,60 55,20 85,15 C115,10 135,45 130,110 Z" fill="url(#danxiaGrad)" stroke="#2B3A42" stroke-width="1.5" stroke-linejoin="round"/>
+      <!-- Peak vegetation caps -->
+      <path d="M65,22 C75,12 95,12 105,20 C95,25 75,25 65,22 Z" fill="#5F824C" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M45,60 C55,55 65,58 70,66 C60,68 50,66 45,60 Z" fill="#698D54" stroke="#2B3A42" stroke-width="1"/>
+      <!-- Cliff striations (Danxia texture) -->
+      <path d="M60,40 Q85,45 110,38" stroke="#7A392C" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <path d="M55,65 Q85,70 120,62" stroke="#7A392C" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <path d="M50,88 Q85,95 125,85" stroke="#7A392C" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+
+      <!-- Secondary Danxia Peak (Yunu Peak) -->
+      <path d="M-10,120 C-15,80 0,55 18,52 C35,49 48,75 42,120 Z" fill="url(#danxiaGrad)" stroke="#2B3A42" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M5,54 C12,48 24,48 30,55 Z" fill="#698D54" stroke="#2B3A42" stroke-width="1"/>
+    </g>
+
+    <!-- Bamboo Raft on Jiuqu Stream -->
+    <g transform="translate(45, 125)">
+      <!-- Curved Raft -->
+      <path d="M-18,5 C-10,2 10,2 24,-2 C22,1 10,5 -14,8 Z" fill="#D8BA7A" stroke="#2B3A42" stroke-width="1.2"/>
+      <!-- Bamboo poles lines -->
+      <line x1="-12" y1="5" x2="20" y2="0" stroke="#9E7D42" stroke-width="0.8"/>
+      <!-- Bamboo chair -->
+      <rect x="0" y="-3" width="7" height="6" fill="#C49B58" stroke="#2B3A42" stroke-width="0.9"/>
+      <!-- Punter silhouette with bamboo pole -->
+      <circle cx="-8" cy="-6" r="2.5" fill="#3D4D55"/>
+      <line x1="-8" y1="-3.5" x2="-8" y2="4" stroke="#3D4D55" stroke-width="1.5"/>
+      <line x1="-16" y1="-8" x2="4" y2="10" stroke="#684C2F" stroke-width="1.1"/>
+    </g>
+
+    <!-- Dahongpao Tea Bush & Teapot doodle -->
+    <g transform="translate(130, 95)">
+      <path d="M0,0 Q6,-8 12,0 Q18,-8 24,0 Q12,10 0,0 Z" fill="#6E9958" stroke="#2B3A42" stroke-width="1.1"/>
+      <circle cx="6" cy="-2" r="1.2" fill="#A8D68B"/>
+      <!-- Tiny clay teapot -->
+      <g transform="translate(24, 15)">
+        <ellipse cx="0" cy="0" rx="6" ry="4" fill="#8E4638" stroke="#2B3A42" stroke-width="1"/>
+        <path d="M-6,0 C-9,-2 -9,-5 -6,-5" fill="none" stroke="#2B3A42" stroke-width="1"/>
+        <path d="M6,0 L9,-3" stroke="#2B3A42" stroke-width="1.2"/>
+        <circle cx="0" cy="-4" r="1.5" fill="#8E4638" stroke="#2B3A42" stroke-width="0.8"/>
+      </g>
+    </g>
+
+    <!-- Wuyishan Label Badge -->
+    <g transform="translate(60, 150)">
+      <circle cx="-8" cy="-5" r="4.5" fill="#D34B3E" stroke="#FAF8F5" stroke-width="1.5"/>
+      <text x="3" y="0" font-family="'PingFang SC','STHeiti','Microsoft YaHei',sans-serif" font-size="16" font-weight="bold" fill="#2B3A42">武夷山</text>
+      <text x="3" y="14" font-family="'Helvetica Neue',Arial,sans-serif" font-size="9" font-weight="600" fill="#6A7A82">Mt. Wuyi (Day 2)</text>
+      <text x="3" y="27" font-family="'PingFang SC',sans-serif" font-size="8" fill="#8C7355">九曲溪竹筏 · 天游峰</text>
+    </g>
+  </g>
+
+  <!-- ==================== REGION 4: QUANZHOU (END POINT / HIGHLIGHT) ==================== -->
+  <g id="landmark-quanzhou" transform="translate(920, 310)">
+    <!-- Kaiyuan Temple Twin Stone Pagodas (East & West Pagodas) -->
+    <!-- West Pagoda (Renhe Pagoda) -->
+    <g transform="translate(20, 100)" filter="url(#soft-shadow)">
+      <!-- Stone Octagonal base -->
+      <rect x="-10" y="24" width="20" height="6" fill="#BCB6A8" stroke="#2B3A42" stroke-width="1.2"/>
+      <!-- Level 1 -->
+      <polygon points="-8,24 8,24 7,16 -7,16" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-11,16 C-5,14 5,14 11,16 Z" fill="#8B867C" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Level 2 -->
+      <polygon points="-7,15 7,15 6,8 -6,8" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-9,8 C-4,6 4,6 9,8 Z" fill="#8B867C" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Level 3 -->
+      <polygon points="-6,8 6,8 5,1 -5,1" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-8,1 C-4,-1 4,-1 8,1 Z" fill="#8B867C" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Level 4 -->
+      <polygon points="-5,1 5,1 4,-6 -4,-6" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-7,-6 C-3,-8 3,-8 7,-6 Z" fill="#8B867C" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Level 5 -->
+      <polygon points="-4,-6 4,-6 3,-13 -3,-13" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-5,-13 C-2,-15 2,-15 5,-13 Z" fill="#8B867C" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Spire -->
+      <line x1="0" y1="-14" x2="0" y2="-21" stroke="#2B3A42" stroke-width="1.3"/>
+      <circle cx="0" cy="-18" r="1.5" fill="#C9A356"/>
+    </g>
+
+    <!-- East Pagoda (Zhenguo Pagoda) - Taller perspective -->
+    <g transform="translate(60, 85)" filter="url(#soft-shadow)">
+      <rect x="-11" y="27" width="22" height="7" fill="#BCB6A8" stroke="#2B3A42" stroke-width="1.2"/>
+      <polygon points="-9,27 9,27 8,17 -8,17" fill="#C5BFB3" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-12,17 C-5,15 5,15 12,17 Z" fill="#7D776E" stroke="#2B3A42" stroke-width="1.1"/>
+      <polygon points="-8,16 8,16 7,8 -7,8" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-10,8 C-4,6 4,6 10,8 Z" fill="#7D776E" stroke="#2B3A42" stroke-width="1.1"/>
+      <polygon points="-7,8 7,8 6,0 -6,0" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-9,0 C-4,-2 4,-2 9,0 Z" fill="#7D776E" stroke="#2B3A42" stroke-width="1.1"/>
+      <polygon points="-6,0 6,0 5,-8 -5,-8" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-7,-8 C-3,-10 3,-10 7,-8 Z" fill="#7D776E" stroke="#2B3A42" stroke-width="1.1"/>
+      <polygon points="-5,-8 5,-8 4,-16 -4,-16" fill="#D0CABF" stroke="#2B3A42" stroke-width="1.1"/>
+      <path d="M-6,-16 C-2,-18 2,-18 6,-16 Z" fill="#7D776E" stroke="#2B3A42" stroke-width="1.1"/>
+      <line x1="0" y1="-17" x2="0" y2="-26" stroke="#2B3A42" stroke-width="1.4"/>
+      <circle cx="0" cy="-22" r="1.8" fill="#C9A356"/>
+    </g>
+
+    <!-- Minnan Red-Brick Swallowtail Roof House (红砖古厝) -->
+    <g transform="translate(125, 95)">
+      <!-- Base & Red brick wall -->
+      <rect x="-20" y="10" width="40" height="20" fill="#D46049" stroke="#2B3A42" stroke-width="1.2"/>
+      <!-- Stone foundation stripe -->
+      <rect x="-20" y="24" width="40" height="6" fill="#D7D3C6" stroke="#2B3A42" stroke-width="1"/>
+      <!-- Wooden twin door -->
+      <rect x="-5" y="16" width="10" height="14" fill="#5E3725" stroke="#2B3A42" stroke-width="1.1"/>
+      <!-- Swallowtail Ridge (Curved high tips) -->
+      <path d="M-28,4 C-20,9 -10,10 0,10 C10,10 20,9 28,4 C22,12 12,12 0,12 C-12,12 -22,12 -28,4 Z" fill="#882C1B" stroke="#2B3A42" stroke-width="1.3"/>
+      <!-- Roof tiles -->
+      <polygon points="-22,10 22,10 18,14 -18,14" fill="#BE4D37"/>
+    </g>
+
+    <!-- Ancient Maritime Silk Road Junk Ship (海上丝绸之路古船) -->
+    <g transform="translate(195, 205)">
+      <!-- Hull -->
+      <path d="M-22,0 C-18,12 15,12 26,0 C15,3 -12,2 -22,0 Z" fill="#8B5B3E" stroke="#2B3A42" stroke-width="1.3"/>
+      <!-- Masts -->
+      <line x1="-6" y1="0" x2="-6" y2="-22" stroke="#2B3A42" stroke-width="1.4"/>
+      <line x1="10" y1="0" x2="10" y2="-18" stroke="#2B3A42" stroke-width="1.2"/>
+      <!-- Battened Chinese Sails -->
+      <path d="M-6,-20 C0,-17 3,-9 -6,-4 Z" fill="#F0E3CB" stroke="#2B3A42" stroke-width="1.1"/>
+      <line x1="-6" y1="-15" x2="-1" y2="-13" stroke="#2B3A42" stroke-width="0.8"/>
+      <line x1="-6" y1="-10" x2="1" y2="-8" stroke="#2B3A42" stroke-width="0.8"/>
+      <path d="M10,-16 C15,-14 17,-7 10,-3 Z" fill="#E4D5BA" stroke="#2B3A42" stroke-width="1"/>
+      <!-- Water ripples -->
+      <path d="M-26,4 C-20,6 -14,3 -8,5" stroke="#527B88" stroke-width="1" fill="none"/>
+      <path d="M12,4 C18,6 24,3 30,5" stroke="#527B88" stroke-width="1" fill="none"/>
+    </g>
+
+    <!-- Quanzhou Gourmet Food Bowls Doodle: 姜母鸭 · 面线糊 · 烧肉粽 · 海蛎煎 -->
+    <g transform="translate(120, 160)" filter="url(#soft-shadow)">
+      <!-- Ceramic Plate: Ginger Duck (姜母鸭 casserole) -->
+      <g transform="translate(-40, 0)">
+        <ellipse cx="0" cy="0" rx="14" ry="7" fill="#694C3D" stroke="#2B3A42" stroke-width="1.2"/>
+        <ellipse cx="0" cy="-2" rx="11" ry="5" fill="#8A4826"/>
+        <!-- Golden duck meat chunks & ginger slices -->
+        <circle cx="-3" cy="-2" r="2.5" fill="#D98A3C"/>
+        <circle cx="3" cy="-1" r="2" fill="#E2A64D"/>
+        <line x1="-7" y1="-4" x2="-5" y2="0" stroke="#F5D78E" stroke-width="1.2"/>
+      </g>
+      <!-- Bowl of Oyster Omelet / Noodles (面线糊/海蛎煎) -->
+      <g transform="translate(-6, 2)">
+        <ellipse cx="0" cy="0" rx="13" ry="7" fill="#FAF6EE" stroke="#2B3A42" stroke-width="1.2"/>
+        <ellipse cx="0" cy="-1" rx="10" ry="4.5" fill="#EAD6A6"/>
+        <circle cx="-2" cy="-1" r="1.5" fill="#3D7B52"/>
+        <circle cx="2" cy="-2" r="1.5" fill="#DC4C38"/>
+        <circle cx="3" cy="1" r="1.2" fill="#3E3A39"/>
+      </g>
+      <!-- Minnan Rice Dumpling (烧肉粽) -->
+      <g transform="translate(28, 0)">
+        <polygon points="0,-8 -9,4 9,4" fill="#668748" stroke="#2B3A42" stroke-width="1.1"/>
+        <line x1="-9" y1="4" x2="0" y2="-2" stroke="#2B3A42" stroke-width="0.9"/>
+        <line x1="0" y1="-2" x2="9" y2="4" stroke="#2B3A42" stroke-width="0.9"/>
+        <!-- Tied straw ribbon -->
+        <line x1="-5" y1="-1" x2="5" y2="0" stroke="#E2B755" stroke-width="1.3"/>
+      </g>
+    </g>
+
+    <!-- Quanzhou Label Badge -->
+    <g transform="translate(30, 210)">
+      <circle cx="-8" cy="-5" r="5" fill="#D34B3E" stroke="#FAF8F5" stroke-width="1.5"/>
+      <text x="5" y="1" font-family="'PingFang SC','STHeiti','Microsoft YaHei',sans-serif" font-size="17" font-weight="bold" fill="#2B3A42">泉州</text>
+      <text x="5" y="16" font-family="'Helvetica Neue',Arial,sans-serif" font-size="9" font-weight="600" fill="#6A7A82">Quanzhou (终点 · 10天)</text>
+      <text x="5" y="29" font-family="'PingFang SC',sans-serif" font-size="8" fill="#8C7355">开元寺双塔 · 簪花围 · 海丝古港</text>
+      <text x="5" y="41" font-family="'PingFang SC',sans-serif" font-size="7.5" fill="#D34B3E">姜母鸭 · 面线糊 · 烧肉粽 · 海蛎煎</text>
+    </g>
+  </g>
+
+  <!-- ==================== CUTE ROAD TRIP SUV WITH LUGGAGE ==================== -->
+  <!-- Cruising along the highway between Nanchang and Wuyishan -->
+  <g id="travel-suv" transform="translate(470, 240) rotate(22)" filter="url(#soft-shadow)">
+    <!-- Car shadow -->
+    <ellipse cx="0" cy="11" rx="18" ry="4" fill="#2B3A42" opacity="0.25"/>
+    
+    <!-- Luggage on roof rack -->
+    <rect x="-10" y="-12" width="20" height="2.5" rx="1" fill="#434E54"/>
+    <!-- Suitcase 1 (Teal) -->
+    <rect x="-9" y="-19" width="10" height="7" rx="1.5" fill="#589B9B" stroke="#2B3A42" stroke-width="0.9"/>
+    <!-- Suitcase 2 (Coral Red) -->
+    <rect x="2" y="-18" width="8" height="6" rx="1.5" fill="#DC5A46" stroke="#2B3A42" stroke-width="0.9"/>
+    <ellipse cx="6" cy="-15" rx="1.5" ry="1.5" fill="#F8E5C4"/>
+
+    <!-- Yellow Car Body -->
+    <path d="M-15,8 L16,8 C17,8 18,7 17,5 L15,1 C14,-1 11,-2 8,-4 L-3,-4 C-6,-4 -10,-1 -13,2 L-16,5 C-17,7 -16,8 -15,8 Z" 
+          fill="#F2B73F" stroke="#2B3A42" stroke-width="1.3" stroke-linejoin="round"/>
+    <!-- Windows (Sky tint) -->
+    <path d="M-3,-2 L7,-2 L5,1 L-4,1 Z" fill="#E0F0F5" stroke="#2B3A42" stroke-width="0.9"/>
+    <path d="M-10,1 L-5,1 L-4,1 L-8,1 Z" fill="#E0F0F5"/>
+    <polygon points="-9,1 -5,1 -5,-2 -8,-2" fill="#E0F0F5" stroke="#2B3A42" stroke-width="0.8"/>
+    <!-- Headlight & Taillight -->
+    <circle cx="16.5" cy="4" r="1.2" fill="#FAF6A5"/>
+    <circle cx="-16" cy="4" r="1" fill="#DC3E32"/>
+    <!-- Wheels -->
+    <circle cx="-9" cy="8" r="4.2" fill="#2E373B" stroke="#2B3A42" stroke-width="1.1"/>
+    <circle cx="-9" cy="8" r="1.8" fill="#E5EAEB"/>
+    <circle cx="9" cy="8" r="4.2" fill="#2E373B" stroke="#2B3A42" stroke-width="1.1"/>
+    <circle cx="9" cy="8" r="1.8" fill="#E5EAEB"/>
+  </g>
+
+  <!-- ==================== VINTAGE COMPASS ROSE (TOP-LEFT CORNER) ==================== -->
+  <g id="compass-rose" transform="translate(95, 100)" filter="url(#soft-shadow)">
+    <!-- Outer delicate ring -->
+    <circle cx="0" cy="0" r="34" fill="none" stroke="#2B3A42" stroke-width="1.2"/>
+    <circle cx="0" cy="0" r="31" fill="none" stroke="#2B3A42" stroke-width="0.7" stroke-dasharray="2 2"/>
+    <circle cx="0" cy="0" r="28" fill="#FAF8F3" stroke="#CBB998" stroke-width="0.6"/>
+
+    <!-- 8 Points Star -->
+    <!-- Ordinal points -->
+    <polygon points="0,0 4,-4 18,-18 0,0" fill="#BF9763"/>
+    <polygon points="0,0 -4,-4 -18,-18 0,0" fill="#936F44"/>
+    <polygon points="0,0 4,4 18,18 0,0" fill="#936F44"/>
+    <polygon points="0,0 -4,4 -18,18 0,0" fill="#BF9763"/>
+    <polygon points="0,0 4,-4 18,-18 0,0" fill="#C9A36F"/>
+    <polygon points="0,0 4,-4 18,18 0,0" fill="#AF8755"/>
+    <polygon points="0,0 -4,-4 -18,18 0,0" fill="#AF8755"/>
+
+    <!-- Cardinal points (Primary) -->
+    <!-- North -->
+    <polygon points="0,0 -5,-5 0,-33 0,0" fill="#D34B3E" stroke="#2B3A42" stroke-width="0.6"/>
+    <polygon points="0,0 5,-5 0,-33 0,0" fill="#B3362A" stroke="#2B3A42" stroke-width="0.6"/>
+    <!-- South -->
+    <polygon points="0,0 -5,5 0,33 0,0" fill="#6A808C" stroke="#2B3A42" stroke-width="0.6"/>
+    <polygon points="0,0 5,5 0,33 0,0" fill="#4B606C" stroke="#2B3A42" stroke-width="0.6"/>
+    <!-- East -->
+    <polygon points="0,0 5,-5 33,0 0,0" fill="#D5AB72" stroke="#2B3A42" stroke-width="0.6"/>
+    <polygon points="0,0 5,5 33,0 0,0" fill="#AA814B" stroke="#2B3A42" stroke-width="0.6"/>
+    <!-- West -->
+    <polygon points="0,0 -5,-5 -33,0 0,0" fill="#D5AB72" stroke="#2B3A42" stroke-width="0.6"/>
+    <polygon points="0,0 -5,5 -33,0 0,0" fill="#AA814B" stroke="#2B3A42" stroke-width="0.6"/>
+
+    <!-- Center pin -->
+    <circle cx="0" cy="0" r="3.5" fill="#FAF6EE" stroke="#2B3A42" stroke-width="1.2"/>
+    <circle cx="0" cy="0" r="1.5" fill="#D34B3E"/>
+
+    <!-- Labels -->
+    <text x="0" y="-37" text-anchor="middle" font-family="'Georgia',serif" font-size="11" font-weight="bold" fill="#2B3A42">N</text>
+    <text x="0" y="46" text-anchor="middle" font-family="'Georgia',serif" font-size="10" font-weight="bold" fill="#2B3A42">S</text>
+    <text x="42" y="3.5" text-anchor="middle" font-family="'Georgia',serif" font-size="10" font-weight="bold" fill="#2B3A42">E</text>
+    <text x="-42" y="3.5" text-anchor="middle" font-family="'Georgia',serif" font-size="10" font-weight="bold" fill="#2B3A42">W</text>
+  </g>
+
+  <!-- ==================== MAP TITLE BANNER ==================== -->
+  <g id="title-banner" transform="translate(600, 58)">
+    <!-- Watercolor Highlight Swash underneath -->
+    <path d="M-260,-22 C-130,-30 130,-30 260,-20 C280,-10 270,18 240,22 C130,28 -130,28 -240,20 C-270,16 -280,-12 -260,-22 Z" 
+          fill="url(#titleWash)" filter="url(#watercolor-wash)"/>
+    
+    <!-- Title Map Pin Icon -->
+    <g transform="translate(-235, -2)">
+      <ellipse cx="0" cy="3" rx="4" ry="2" fill="#2B3A42" opacity="0.2"/>
+      <path d="M0,-12 C-5,-12 -8,-8 -8,-3 C-8,3 0,11 0,11 C0,11 8,3 8,-3 C8,-8 5,-12 0,-12 Z" fill="#DC4C38" stroke="#2B3A42" stroke-width="1.2"/>
+      <circle cx="0" cy="-4" r="2.5" fill="#FAF6EE"/>
+    </g>
+
+    <!-- Main Title Hand-drawn style typography -->
+    <text x="-215" y="7" font-family="'PingFang SC','Kaiti','STKaiti','Microsoft YaHei',sans-serif" font-size="33" font-weight="bold" fill="#2B3A42" letter-spacing="2">
+      长沙➔泉州 10天自驾路书
+    </text>
+
+    <!-- Subtitle Flag / Tag -->
+    <g transform="translate(195, -2)">
+      <path d="M0,-12 L32,-12 L26,-2 L32,8 L0,8 Z" fill="#E8A742" stroke="#2B3A42" stroke-width="1.1"/>
+      <text x="4" y="0" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="8.5" font-weight="bold" fill="#2B3A42">闽赣湘</text>
+      <line x1="0" y1="-15" x2="0" y2="15" stroke="#2B3A42" stroke-width="1.4" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- ==================== DECORATIVE BOTANICAL DOODLES & CLOUDS ==================== -->
+  <!-- Cute Watercolor Cloud Puffs -->
+  <g id="watercolor-clouds" fill="#FFFFFF" opacity="0.82" stroke="#2B3A42" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Cloud 1 (Center Sky) -->
+    <path d="M300,90 C300,80 312,72 325,75 C333,65 350,65 358,74 C370,72 382,82 380,92 C390,96 392,108 382,115 C345,116 315,116 295,112 C290,104 292,94 300,90 Z"/>
+    <!-- Cloud 2 (Over Wuyi) -->
+    <path d="M830,95 C830,88 840,80 850,83 C858,74 872,75 878,82 C888,80 898,88 896,96 C904,101 904,111 896,116 C865,117 840,117 825,113 C822,105 824,98 830,95 Z" transform="scale(0.85) translate(140, 10)"/>
+    <!-- Cloud 3 (South Coast) -->
+    <path d="M720,470 C720,462 730,455 740,457 C747,450 760,45</svg>

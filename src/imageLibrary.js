@@ -204,37 +204,38 @@ function getDestinationImages(origin, destination, imageStyle = 'journal_doodle'
   return dynSet;
 }
 
-// Injects destination-matched images accurately into LLM markdown, replacing any hallucinated or mismatched images
+// 将插图注入路书开头：清除正文中所有既有插图（含旧的四图画报区块），
+// 只在标题/引用块之后插入一幅「出游路线手绘地图」。
+// imgSet 兼容旧结构：仅使用其中的 routeMap 一项。
 function injectDestinationImages(markdown, imgSet) {
   let doc = markdown;
 
-  // 1. Remove all existing markdown images to prevent legacy or mismatched duplicates
+  // 1. 移除正文中所有 markdown 插图，防止遗留或不匹配的图片；同时清掉旧版四图画报的区块标题
   doc = doc.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '');
+  doc = doc.replace(/\n?##\s*00\s*视觉手账画报与全景展示\s*\n?/g, '\n');
   doc = doc.replace(/\n{3,}/g, '\n\n');
 
-  // 2. Build the guaranteed 4-card Visual Showcase Banner
-  const visualBanner = [
-    `\n\n## 00 视觉手账画报与全景展示`,
-    `![${imgSet.routeMap.alt}](${imgSet.routeMap.url})`,
-    `*🚗 自驾路线规划全景手绘图（${imgSet.routeMap.desc}）*\n`,
-    `![${imgSet.scenery1.alt}](${imgSet.scenery1.url})`,
-    `*🏔️ 核心自然标志景观手账（${imgSet.scenery1.desc}）*\n`,
-    `![${imgSet.scenery2.alt}](${imgSet.scenery2.url})`,
-    `*🏮 特色历史人文慢游手账（${imgSet.scenery2.desc}）*\n`,
-    `![${imgSet.food.alt}](${imgSet.food.url})`,
-    `*🍲 地方非遗风味美食品鉴手账（${imgSet.food.desc}）*\n\n`
+  // 2. 只取开头一幅路线手绘地图
+  const cover = imgSet && imgSet.routeMap;
+  if (!cover || !cover.url) return doc;
+
+  const imageBlock = [
+    ``,
+    `![${cover.alt || '出游路线手绘地图'}](${cover.url})`,
+    `*🗺️ ${cover.desc || '结合全文行程与每个景点特色绘制的出游路线手绘地图'}*`,
+    ``
   ].join('\n');
 
-  // Insert right after the top quote block (or after H1)
+  // 3. 插入在顶部引用块之后（或 H1 之后）
   const quoteMatch = doc.match(/(#\s+[^\n]+\n+(?:>[\s\S]*?\n+)+)/);
   if (quoteMatch) {
-    doc = doc.replace(quoteMatch[0], `${quoteMatch[0].trimEnd()}${visualBanner}`);
+    doc = doc.replace(quoteMatch[0], `${quoteMatch[0].trimEnd()}${imageBlock}`);
   } else {
     const h1Match = doc.match(/(#\s+[^\n]+\n+)/);
     if (h1Match) {
-      doc = doc.replace(h1Match[0], `${h1Match[0]}${visualBanner}`);
+      doc = doc.replace(h1Match[0], `${h1Match[0]}${imageBlock}`);
     } else {
-      doc = `${visualBanner}${doc}`;
+      doc = `${imageBlock}${doc}`;
     }
   }
 

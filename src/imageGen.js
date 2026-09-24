@@ -325,7 +325,35 @@ STRICT VISUAL AESTHETICS (Imitate the provided style reference image):
 3. Core Elements: Miniature landmarks (snow-capped mountain with white peaks, ancient stone pavilions with flying eaves, arched bridges, conifer pine trees, cute yellow SUV with roof luggage), vintage decorative 8-point compass rose in corner, botanical border doodles, cute soft puffy watercolor clouds, hand-lettered badge tags.
 4. Negative Constraints: Strictly avoid photorealistic, photo, 3d render, CGI, dark lighting, messy sketch, neon colors, modern GPS navigation UI, high contrast, oversaturated.
 5. Technical: Root element <svg viewBox="0 0 1200 675" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">. Fully valid XML SVG with <defs>, <linearGradient>, <filter>, <path>, <rect>, <circle>, <polygon>, <text>, <g>.
-6. Output: Output ONLY the complete <svg>...</svg> code inside \`\`\`xml or \`\`\`svg codeblock. No extra explanations.`;
+6. Output: Output ONLY the complete <svg>...</svg> code inside \`\`\`xml or \`\`\`svg codeblock. No extra explanations.
+7. TOKEN BUDGET (critical): the output token limit is finite. Keep the SVG COMPACT so it never gets cut off mid-tag — use at most ~50 elements, prefer <circle>/<rect>/<polygon>/<line> over long <path> data, limit gradients and filters to the few essential ones, and keep decorative detail restrained. A complete smaller SVG is far better than a truncated elaborate one.`;
+
+// 截断 SVG 修复：去掉末尾半个标签，用栈补全未闭合的元素，最后闭合 </svg>
+function repairTruncatedSvg(text) {
+  let svg = text.slice(text.indexOf('<svg'));
+  // 去掉末尾未写完的半个标签（如 `<rect x="12` 或孤立的 `<`）
+  svg = svg.replace(/<[^<>]*$/, '');
+  // 栈式扫描，记录未闭合的开启标签
+  const stack = [];
+  const tagRe = /<\/?([a-zA-Z][\w:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+  let m;
+  while ((m = tagRe.exec(svg)) !== null) {
+    const full = m[0];
+    const name = m[1];
+    if (name === 'svg') continue; // 根元素不入栈，由函数末尾统一闭合
+    if (full.startsWith('</')) {
+      // 与栈顶匹配则弹出（容忍模型偶尔的标签不匹配）
+      if (stack[stack.length - 1] === name) stack.pop();
+    } else if (!full.endsWith('/>')) {
+      stack.push(name);
+    }
+  }
+  while (stack.length > 0) {
+    svg += `</${stack.pop()}>`;
+  }
+  svg += '</svg>';
+  return svg;
+}
 
   const userContent = [
     {
@@ -375,7 +403,7 @@ Negative Constraints: ${negativePrompt}`
           { role: 'user', content: userContent }
         ],
         temperature: 0.3,
-        max_tokens: 8192
+        max_tokens: 16384
       }),
       signal: controller.signal
     });
@@ -392,8 +420,19 @@ Negative Constraints: ${negativePrompt}`
 
   const json = await res.json();
   if (json.choices && json.choices[0] && json.choices[0].message) {
-    const text = json.choices[0].message.content || '';
-    const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+    const choice = json.choices[0];
+    let text = choice.message.content || '';
+    // 思维链模型可能把 SVG 放进 reasoning_content
+    if (!text.includes('<svg') && choice.message.reasoning_content) {
+      text = choice.message.reasoning_content;
+    }
+    let svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+    if (!svgMatch && text.includes('<svg') && choice.finish_reason === 'length') {
+      // 输出被 max_tokens 截断：修复后兜底解析
+      console.warn('[ImageGen Multimodal LLM] SVG output truncated by token limit, attempting repair');
+      const repaired = repairTruncatedSvg(text);
+      svgMatch = repaired.match(/<svg[\s\S]*<\/svg>/i);
+    }
     if (svgMatch) {
       return `data:image/svg+xml;utf8,${encodeURIComponent(svgMatch[0])}`;
     }

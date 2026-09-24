@@ -86,126 +86,98 @@ function extractRoadbookHighlights(markdown, origin, destination) {
     topFoods: topFoods.slice(0, 8)
   };
 }
+// 用户指定的开头插图绘图指令
+const ROUTE_MAP_INSTRUCTION = '结合这个行程安排，和每个景点特色，绘制一张出游路线手绘地图';
 
-// Generate the 4 roadbook illustrations dynamically tailored to ACTUAL itinerary
-// Guaranteed to produce accurate visual assets matching destination, route, and local dishes!
-async function generateRoadbookImages({ origin, destination, days, imageStyle, customStylePrompt, imageConfig, apiKey, baseUrl, roadbookContent }) {
+// 与 imageGen.js 保持一致的扩散模型判定（扩散模型不支持长提示词）
+function isDiffusionModel(imageModel) {
+  const m = (imageModel || '').toLowerCase();
+  return m.includes('dall-e') || m.includes('flux') || m.includes('imagen') ||
+         m.includes('stable-diffusion') || m.includes('sdxl') ||
+         m.includes('midjourney') || m.includes('cogview');
+}
+
+// 生成路书开头的「出游路线手绘地图」单图。
+// 多模态 chat LLM / Vertex 路径：发送路书全文 + 绘图指令（用户要求）；
+// 扩散模型（DALL·E / FLUX 等）：提示词必须精简，改用从正文提取的行程要点；
+// 任何失败都降级为程序化 SVG 兜底，保证插图位永远有图。
+async function generateRouteMapImage({ origin, destination, days, imageStyle, customStylePrompt, imageConfig, apiKey, baseUrl, roadbookContent }) {
   const styleInfo = STYLE_DEFINITIONS[imageStyle] || STYLE_DEFINITIONS.journal_doodle;
   const stylePrompt = [styleInfo.promptModifier, customStylePrompt || ''].filter(Boolean).join(', ');
   const imageModel = (imageConfig && imageConfig.imageModel) || 'gemini-3.8-flash';
   const imgBaseUrl = (imageConfig && imageConfig.baseUrl) || baseUrl;
   const imgApiKey = (imageConfig && imageConfig.apiKey) || apiKey;
   const imgSize = (imageConfig && imageConfig.size) || '1792x1024';
-  const referenceImage = (imageConfig && imageConfig.referenceImage) || DEFAULT_REF_BASE64;
+  const negativePrompt = (imageConfig && imageConfig.negativePrompt) || styleInfo.negativePrompt || DEFAULT_NEGATIVE_PROMPT;
+  const clientHeader = (imageConfig && imageConfig.clientHeader) || 'roadtrip-planner';
 
-  // 1. Extract actual itinerary stops, landmarks, and signature foods from the generated roadbook!
+  // 1. 从路书正文提取行程亮点（用于扩散模型的精简提示词与 SVG 兜底）
   const details = extractRoadbookHighlights(roadbookContent || '', origin, destination);
   const routePointsStr = details.keyStops.slice(0, 6).join(' ➔ ');
-  const scenic1Name = details.topAttractions[0] || `${destination}核心自然奇观`;
-  const scenic2Name = details.topAttractions[1] || details.topAttractions[2] || `${destination}特色人文名胜`;
-  const foodsStr = details.topFoods.length > 0 ? details.topFoods.slice(0, 4).join('、') : `${destination}特色地道美食`;
+  const landmarksStr = details.topAttractions.slice(0, 5).join(', ');
 
-  console.log(`[Dynamic ImageGen] Extracted highlights for ${destination}:`);
-  console.log(`  - Real route stops: ${routePointsStr}`);
-  console.log(`  - Real natural landscape: ${scenic1Name}`);
-  console.log(`  - Real cultural heritage: ${scenic2Name}`);
-  console.log(`  - Real food specialties: ${foodsStr}`);
-  console.log(`  - Reference image attached: ${Boolean(referenceImage)}`);
+  // 2. 按模型类型构造提示词
+  const fullTextPrompt = `${roadbookContent || `${origin} → ${destination} ${days} 天自驾游`}\n\n${ROUTE_MAP_INSTRUCTION}。起点：${origin}，终点：${destination}，全程 ${days} 天。`;
+  const shortPrompt = `A hand-drawn watercolor illustrated travel route map of a ${days}-day road trip from ${origin} to ${destination}. A winding scenic highway connects key stops: ${routePointsStr}. Featuring miniature landmarks: ${landmarksStr || destination + ' scenic landmarks'}. ${ROUTE_MAP_INSTRUCTION}. Delicate black ink line art with soft watercolor washes, vintage cream paper texture, decorative compass rose, cute puffy clouds, travel journal aesthetic, high detail. ${stylePrompt}`;
+  const diffusion = isDiffusionModel(imageModel);
+  const prompt = diffusion ? shortPrompt : fullTextPrompt;
+
+  console.log(`[RouteMap ImageGen] model=${imageModel} promptMode=${diffusion ? 'short' : 'full-text'} (${prompt.length} chars), route: ${routePointsStr}`);
 
   const timestamp = Date.now();
   const cleanDest = Buffer.from(destination || 'trip', 'utf-8').toString('hex').slice(0, 8);
-
   const imagesDir = path.join(PUBLIC_DIR, 'images');
   if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 
-  const keys = ['routeMap', 'scenery1', 'scenery2', 'food'];
-  const results = {};
-
-  const negativePrompt = (imageConfig && imageConfig.negativePrompt) || styleInfo.negativePrompt || DEFAULT_NEGATIVE_PROMPT;
-  const clientHeader = (imageConfig && imageConfig.clientHeader) || 'roadtrip-planner';
-  const landmarksStr = details.topAttractions.slice(0, 5).join(', ');
-
-  // Four dedicated Hand-drawn Watercolor Travel Itinerary prompts based on user design specifications
-  const prompts = {
-    // 示例 1：经典自驾/公路旅行路线图 (Hand-drawn Watercolor Travel Itinerary Map)
-    routeMap: `A hand-drawn watercolor illustrated travel itinerary map of a scenic road trip from ${origin} to ${destination} (${days} days). A winding asphalt highway winds through panoramic isometric miniature green hills, mountains, rivers, and charming villages connecting key stops: ${routePointsStr}. Miniature landmarks along the winding road including ${landmarksStr || destination + ' scenic landmarks'}. Delicate black ink line art filled with soft watercolor washes, arrows showing the route direction, cute decorative vintage compass rose at the top left corner, tiny puffy clouds, pine trees, and miniature yellow road trip SUV driving along. Warm and cozy travel journal aesthetic, clean composition, soft earthy and pastel colors (sage green, soft mountain blue, warm ochre, cream white), on a subtle vintage cream paper texture, high detail, whimsical pictorial map. ${stylePrompt}`,
-
-    // 示例 2：自然景区/环线徒步全景导览图 (示例 3 模板)
-    scenery1: `A panoramic hand-drawn watercolor landscape illustration of ${scenic1Name} in ${destination}. Pen and watercolor style, winding trekking path and scenic road weaving across rolling green valleys, crystal blue alpine lakes or rivers, fir forests, and dramatic snow peaks. Miniature traveler icons, vintage decorative compass rose in corner, small wildlife, delicate black ink contours with soft watercolor wash gradients, gentle natural color palette (sage green, azure blue, warm ochre), traveler sketchbook page, charming and cozy travel diary art, high detail. ${stylePrompt}`,
-
-    // 示例 3：特色古镇/历史街区 Citywalk 路线手账 (示例 2 模板)
-    scenery2: `A whimsical hand-drawn pictorial map illustration for a cultural walking tour of ${scenic2Name} in ${destination}. A winding pedestrian stone path connects miniature cozy traditional architectures, ancient towers, stone bridges, warm glowing lanterns, and local street stalls. Delicate ink contours, soft watercolor fills, cute doodle style, clean cream paper background, tiny arrows indicating the walking route, decorative floral botanical elements in the corners, delightful travel diary illustration, high precision. ${stylePrompt}`,
-
-    // 示例 4：地方非遗风味美食图鉴
-    food: `A delightful hand-drawn watercolor illustration of authentic local food specialties in ${destination}: ${foodsStr}. Steaming savory bowls and dishes arranged on a rustic wooden table with tea cups and chopsticks, delicate black ink line art filled with soft watercolor washes, travel food diary doodle aesthetic, clean cream paper background, fresh natural pastel palette, mouthwatering culinary journal drawing. ${stylePrompt}`
-  };
-
-  // 1. Attempt AI model image generation if API key is provided
+  // 3. 调用生图模型
+  let item = null;
   if (imgApiKey && imageModel) {
-    for (const key of keys) {
-      try {
-        console.log(`[Dynamic ImageGen] Calling image/LLM model [${imageModel}] for [${key}] with style reference image...`);
-        const imgUrl = await callImageGenerationAPI({
-          prompt: prompts[key],
-          imageModel,
-          apiKey: imgApiKey,
-          baseUrl: imgBaseUrl,
-          size: imgSize,
-          negativePrompt,
-          clientHeader,
-          referenceImage
-        });
-        const savedPath = await downloadAndSaveImage(imgUrl, `ai_${cleanDest}_${key}_${timestamp}.png`);
-        results[key] = {
-          url: savedPath,
-          alt: `${destination}${key === 'routeMap' ? '自驾手绘水彩路线图' : key === 'scenery1' ? scenic1Name : key === 'scenery2' ? scenic2Name : '特色美食品鉴'}`,
-          desc: key === 'routeMap' ? `根据您的${days}天专属行程动态绘制的水彩自驾手账图（途经：${routePointsStr}）` :
-                key === 'scenery1' ? `行程核心自然景观：${scenic1Name}` :
-                key === 'scenery2' ? `行程特色人文街区：${scenic2Name}` :
-                `行程精选地道风味：${foodsStr}`,
-          prompt: prompts[key],
-          negativePrompt,
-          referenceImage: './images/style_reference_watercolor_map.jpg'
-        };
-      } catch (err) {
-        console.warn(`[Dynamic ImageGen Model Fail] Fallback to dynamic SVG for [${key}]:`, err.message);
-      }
-    }
-  }
-
-  // 2. Generate customized Vector SVGs for any slots not yet filled
-  // This guarantees 100% success, zero timeouts, and PERFECT match to the actual itinerary!
-  for (const key of keys) {
-    if (!results[key]) {
-      const svgContent = generateDynamicRoadbookSVG({
-        type: key,
-        origin,
-        destination,
-        days,
-        routeStops: details.keyStops,
-        attractions: details.topAttractions,
-        foods: details.topFoods,
-        imageStyle
-      });
-      const svgFilename = `dyn_${cleanDest}_${key}_${timestamp}.svg`;
-      const svgPath = path.join(imagesDir, svgFilename);
-      fs.writeFileSync(svgPath, svgContent, 'utf-8');
-
-      results[key] = {
-        url: `./images/${svgFilename}`,
-        alt: `${destination}${key === 'routeMap' ? '自驾手绘水彩路线图' : key === 'scenery1' ? scenic1Name : key === 'scenery2' ? scenic2Name : '特色美食品鉴全景图'}`,
-        desc: key === 'routeMap' ? `根据${days}天行程动态绘制的水彩自驾手账路线（途经：${routePointsStr}）` :
-              key === 'scenery1' ? `行程核心自然景观：${scenic1Name}` :
-              key === 'scenery2' ? `行程特色人文街区：${scenic2Name}` :
-              `行程精选地道风味：${foodsStr}`,
-        prompt: prompts[key],
+    try {
+      const imgUrl = await callImageGenerationAPI({
+        prompt,
+        imageModel,
+        apiKey: imgApiKey,
+        baseUrl: imgBaseUrl,
+        size: imgSize,
         negativePrompt,
-        referenceImage: './images/style_reference_watercolor_map.jpg'
+        clientHeader,
+        referenceImage: (imageConfig && imageConfig.referenceImage) || null
+      });
+      const savedPath = await downloadAndSaveImage(imgUrl, `ai_${cleanDest}_routeMap_${timestamp}.png`);
+      item = {
+        url: savedPath,
+        alt: `${origin}至${destination}出游路线手绘地图`,
+        desc: `结合全文行程与每个景点特色绘制（途经：${routePointsStr}）`,
+        prompt
       };
+    } catch (err) {
+      console.warn(`[RouteMap ImageGen Model Fail] Fallback to dynamic SVG:`, err.message);
     }
   }
 
-  return results;
+  // 4. 兜底：程序化动态 SVG（内容取自行程文本，版式与水彩风一致）
+  if (!item) {
+    const svgContent = generateDynamicRoadbookSVG({
+      type: 'routeMap',
+      origin,
+      destination,
+      days,
+      routeStops: details.keyStops,
+      attractions: details.topAttractions,
+      foods: details.topFoods,
+      imageStyle
+    });
+    const svgFilename = `dyn_${cleanDest}_routeMap_${timestamp}.svg`;
+    fs.writeFileSync(path.join(imagesDir, svgFilename), svgContent, 'utf-8');
+    item = {
+      url: `./images/${svgFilename}`,
+      alt: `${origin}至${destination}出游路线手绘地图`,
+      desc: `根据${days}天行程动态绘制的水彩自驾路线手账（途经：${routePointsStr}）`,
+      prompt
+    };
+  }
+
+  return { routeMap: item };
 }
 
-module.exports = { extractRoadbookHighlights, generateRoadbookImages };
+module.exports = { extractRoadbookHighlights, generateRouteMapImage, ROUTE_MAP_INSTRUCTION };

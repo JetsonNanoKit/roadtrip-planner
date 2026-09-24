@@ -9,7 +9,7 @@ const { sendJSON, parseBody, formatFetchError } = require('./src/utils');
 const { STYLE_DEFINITIONS, DEFAULT_NEGATIVE_PROMPT } = require('./src/styles');
 const { getDestinationImages, injectDestinationImages } = require('./src/imageLibrary');
 const { getResolvedReferenceImage, callImageGenerationAPI } = require('./src/imageGen');
-const { generateRoadbookImages } = require('./src/roadbookImages');
+const { generateRouteMapImage } = require('./src/roadbookImages');
 const { generateDynamicRoadbookSVG } = require('./src/svgGenerator');
 const { normalizeEndpoint, callLLM } = require('./src/llm');
 const { getLarkStatus, syncToFeishu } = require('./src/feishu');
@@ -188,8 +188,8 @@ const server = http.createServer(async (req, res) => {
 
       let imgSet;
       if (callModel !== false) {
-        console.log(`[GenerateImages] Dynamically generating images for ${destination} in style ${imageStyle}...`);
-        imgSet = await generateRoadbookImages({
+        console.log(`[GenerateImages] Generating opening route map for ${destination} in style ${imageStyle}...`);
+        imgSet = await generateRouteMapImage({
           origin,
           destination,
           days,
