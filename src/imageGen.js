@@ -504,4 +504,51 @@ async function downloadAndSaveImage(imageUrlOrBase64, filename) {
   }
 }
 
-module.exports = { getResolvedReferenceImage, callImageGenerationAPI, downloadAndSaveImage, DEFAULT_REF_IMAGE_PATH };
+// ── SVG → PNG 本地光栅化 ──────────────────────────────────────────────
+// 该模型路由器无原生出图能力，AI 输出为 SVG 代码；用本机 Chrome 无头渲染
+// 转成普通位图（2x 清晰度），qlmanage 作为应急兜底。
+const CHROME_CANDIDATES = [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'
+];
+
+function execFilePromise(cmd, args, opts = {}) {
+  return new Promise((resolve, reject) => {
+    const { execFile } = require('child_process');
+    execFile(cmd, args, { timeout: 60000, ...opts }, (err, stdout, stderr) => {
+      if (err) { err.stderr = stderr; return reject(err); }
+      resolve(stdout);
+    });
+  });
+}
+
+// 读取 SVG 的 viewBox 决定渲染窗口尺寸（按比例），返回 PNG 绝对路径
+async function convertSvgFileToPng(svgPath) {
+  const svgContent = fs.readFileSync(svgPath, 'utf-8');
+  const vb = (svgContent.match(/viewBox\s*=\s*"([^"]+)"/i) || [])[1];
+  const parts = vb ? vb.trim().split(/[\s,]+/) : null;
+  let w = 1600, h = 900;
+  if (parts && parts.length === 4 && Number(parts[2]) > 0 && Number(parts[3]) > 0) {
+    w = Math.round(Number(parts[2]));
+    h = Math.round(Number(parts[3]));
+  }
+  const pngPath = svgPath.replace(/\.svg$/i, '.png');
+  const chrome = CHROME_CANDIDATES.find(p => fs.existsSync(p));
+  if (chrome) {
+    await execFilePromise(chrome, [
+      '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=2',
+      `--screenshot=${pngPath}`, `--window-size=${w},${h}`, `file://${svgPath}`
+    ], { maxBuffer: 1024 * 1024 });
+  } else {
+    // qlmanage 应急兜底（会产生方形白边）
+    await execFilePromise('qlmanage', ['-t', '-s', String(Math.max(w, h)), '-o', path.dirname(svgPath), svgPath]);
+    const produced = `${svgPath}.png`;
+    if (!fs.existsSync(produced)) throw new Error('qlmanage 未产出缩略图');
+    fs.renameSync(produced, pngPath);
+  }
+  if (!fs.existsSync(pngPath)) throw new Error('PNG 未生成');
+  return pngPath;
+}
+
+module.exports = { getResolvedReferenceImage, callImageGenerationAPI, downloadAndSaveImage, convertSvgFileToPng, DEFAULT_REF_IMAGE_PATH };

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { PUBLIC_DIR } = require('./config');
 const { STYLE_DEFINITIONS, DEFAULT_NEGATIVE_PROMPT } = require('./styles');
-const { callImageGenerationAPI, downloadAndSaveImage } = require('./imageGen');
+const { callImageGenerationAPI, downloadAndSaveImage, convertSvgFileToPng } = require('./imageGen');
 const { generateDynamicRoadbookSVG } = require('./svgGenerator');
 
 function extractRoadbookHighlights(markdown, origin, destination) {
@@ -97,6 +97,21 @@ function isDiffusionModel(imageModel) {
          m.includes('midjourney') || m.includes('cogview');
 }
 
+// 把 ./images/xx.svg 光栅化为 PNG（2x 清晰度）并删除中间 SVG；
+// 转换失败则保留 SVG 兜底，保证插图位永远有图。
+async function rasterizeToPng(savedUrl) {
+  if (!savedUrl || !savedUrl.endsWith('.svg')) return savedUrl;
+  try {
+    const absSvg = path.join(PUBLIC_DIR, savedUrl.replace(/^\.\//, ''));
+    const pngAbs = await convertSvgFileToPng(absSvg);
+    try { fs.unlinkSync(absSvg); } catch (e) {}
+    return `./images/${path.basename(pngAbs)}`;
+  } catch (err) {
+    console.warn('[RouteMap ImageGen] SVG→PNG 转换失败，保留 SVG:', err.message);
+    return savedUrl;
+  }
+}
+
 // 生成路书开头的「出游路线手绘地图」单图。
 // 多模态 chat LLM / Vertex 路径：发送路书全文 + 绘图指令（用户要求）；
 // 扩散模型（DALL·E / FLUX 等）：提示词必须精简，改用从正文提取的行程要点；
@@ -147,8 +162,9 @@ async function generateRouteMapImage({ origin, destination, days, imageStyle, cu
           referenceImage: (imageConfig && imageConfig.referenceImage) || null
         });
         const savedPath = await downloadAndSaveImage(imgUrl, `ai_${cleanDest}_routeMap_${timestamp}_a${attempt}.png`);
+        const finalUrl = await rasterizeToPng(savedPath);
         item = {
-          url: savedPath,
+          url: finalUrl,
           alt: `${origin}至${destination}出游路线手绘地图`,
           desc: `结合全文行程与每个景点特色绘制（途经：${routePointsStr}）`,
           prompt
@@ -173,8 +189,9 @@ async function generateRouteMapImage({ origin, destination, days, imageStyle, cu
     });
     const svgFilename = `dyn_${cleanDest}_routeMap_${timestamp}.svg`;
     fs.writeFileSync(path.join(imagesDir, svgFilename), svgContent, 'utf-8');
+    const finalUrl = await rasterizeToPng(`./images/${svgFilename}`);
     item = {
-      url: `./images/${svgFilename}`,
+      url: finalUrl,
       alt: `${origin}至${destination}出游路线手绘地图`,
       desc: `根据${days}天行程动态绘制的水彩自驾路线手账（途经：${routePointsStr}）`,
       prompt

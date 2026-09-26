@@ -5,6 +5,7 @@ Thumbs.db
 # 运行时产物
 temp_sync_*.md
 public/images/dyn_*.svg
+public/images/dyn_*.png
 public/images/ai_*.png
 public/images/ai_*.svg
 public/images/test_preview_*.svg
