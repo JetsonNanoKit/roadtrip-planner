@@ -320,12 +320,12 @@ async function callImageGenerationAPI({
 Your task: create ONE rich, dense, hand-painted watercolor "road trip route map" (出游路线手绘地图) as a standalone SVG, closely imitating the provided reference image's art style, composition density and charm.
 
 ART STYLE RULES (must imitate the reference image):
-1. Medium & Line: hand-drawn pen-and-ink outlines (dark ink #2B3A42, slightly wobbly organic strokes, NOT mathematically perfect), filled with soft translucent watercolor washes on warm cream textured paper (#FAF7F0).
+1. Medium & Line: hand-drawn pen-and-ink outlines (dark ink #2B3A42, slightly wobbly organic strokes, NOT mathematically perfect), filled with soft translucent watercolor washes on warm cream textured paper (#FAF7F0) that covers the ENTIRE canvas — never leave a plain pure-white background.
 2. Palette: low-saturation earthy pastels — sage green #8FA89B, mountain blue #6B8E9B, warm ochre #C68B59, terracotta #D9826C, autumn orange #D98E4A, snow white #FAF8F5.
-3. Watercolor feel (critical): fake real watercolor with SVG filters — paper grain via feTurbulence + feDisplacementMap, wobbly ink edges via small feDisplacementMap on outline groups, layered wash shapes at 30-60% opacity for depth, soft feathered wash edges via feGaussianBlur. The result must feel hand-painted, NOT flat vector.
-4. Density (critical): the map must be RICH and FULL like the reference image — background layered mountain ranges (3-4 receding layers, snowcaps on high peaks), a winding double-line road with directional arrows and highway shields, EVERY stop on the itinerary gets its own miniature landmark vignette (ancient pavilions with flying eaves, pagodas, stone towers, arched bridges, lakes/rivers, temples, old streets, local food stalls, famous statues or mascots of that place), clusters of pine trees and autumn trees along the route, drifting hand-drawn clouds, a vintage 8-point compass rose (top-left), decorative flowers/leaves/plants framing the corners, a cute small car with luggage driving on the road, and bilingual (Chinese + English) hand-lettered label badges with location pins for every stop.
+3. Watercolor feel (critical): fake real watercolor with SVG filters — paper grain via feTurbulence + feDisplacementMap, wobbly ink edges via small feDisplacementMap on outline groups, layered wash shapes at 30-60% opacity for depth, soft feathered wash edges via feGaussianBlur. Every color area must show wash texture — NO flat solid fills.
+4. Density (critical): the map must be RICH and FULL like the reference image — background layered mountain ranges (3-4 receding layers, snowcaps on high peaks), a winding double-line road with directional arrows and highway shields, EVERY stop on the itinerary gets its own miniature landmark vignette (ancient pavilions with flying eaves, pagodas, stone towers, arched bridges, lakes/rivers, temples, old streets, local food stalls, famous statues or mascots of that place), clusters of pine trees and autumn trees along the route, drifting hand-drawn clouds, a vintage 8-point compass rose (top-left), decorative flowers/leaves/plants framing the corners, a cute small car with luggage driving on the road, a small red dot on the road at EVERY stop, and bilingual (Chinese + English) hand-lettered labels with tiny location pins for every stop — labels sit directly on the map like handwriting, NOT inside UI boxes.
 5. Composition: panoramic pictorial map; origin on the left, destination on the right; the route winds across the whole canvas through all stops in order; a hand-lettered ribbon title banner at the top.
-6. Negative: strictly NO photorealism, NO 3D render, NO neon colors, NO dark UI panels, NO modern GPS navigation look, NO plain flat minimalist vector style.
+6. Negative: strictly NO photorealism, NO 3D render, NO neon colors, NO dark UI panels, NO modern GPS navigation look, NO plain flat minimalist vector style, NO legend box, NO info panels, NO rounded-rectangle label badges, NO drop shadows, NO sharp geometric infographic shapes.
 7. Technical: root element <svg viewBox="0 0 1600 900" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">. Fully valid XML with <defs> (gradients + watercolor filters), <g>, <path>, <rect>, <circle>, <ellipse>, <polygon>, <text> (font-family="PingFang SC, Microsoft YaHei, sans-serif"). Chinese text must render correctly (no escaped entities needed beyond XML basics). Do NOT use XML comments anywhere.
 8. Output: output ONLY the complete <svg>...</svg> code inside a single \`\`\`svg codeblock. No planning, no commentary, no explanations before or after the codeblock — nothing but the SVG. You have a large token budget (32k) — use it: richness and completeness matter far more than brevity. Do NOT stop early; if detail must be sacrificed, sacrifice minor decorations, never the route, stops, landmarks or title.`;
 
@@ -524,8 +524,14 @@ function execFilePromise(cmd, args, opts = {}) {
 }
 
 // 读取 SVG 的 viewBox 决定渲染窗口尺寸（按比例），返回 PNG 绝对路径
+// 渲染时套一层「水彩手账」后期：米白水彩纸纹理背景 + 手绘抖动滤镜，
+// 把模型输出的偏平涂矢量感压成参考图的钢笔淡彩纸面质感。
+const PAPER_TEXTURE_PATH = path.join(PUBLIC_DIR, 'images', 'paper_texture.jpg');
+
 async function convertSvgFileToPng(svgPath) {
-  const svgContent = fs.readFileSync(svgPath, 'utf-8');
+  let svgContent = fs.readFileSync(svgPath, 'utf-8');
+  // 安全兜底：内联进 HTML 前剥掉可能的脚本
+  svgContent = svgContent.replace(/<script[\s\S]*?<\/script>/gi, '');
   const vb = (svgContent.match(/viewBox\s*=\s*"([^"]+)"/i) || [])[1];
   const parts = vb ? vb.trim().split(/[\s,]+/) : null;
   let w = 1600, h = 900;
@@ -533,13 +539,70 @@ async function convertSvgFileToPng(svgPath) {
     w = Math.round(Number(parts[2]));
     h = Math.round(Number(parts[3]));
   }
+
+  const hasPaper = fs.existsSync(PAPER_TEXTURE_PATH);
+  if (hasPaper) {
+    // 1) 强制纸面底色：模型常自作主张画深色/纯白底，把根级全幅 rect 背景
+    //    剥掉，统一换成米白水彩纸（底色层 + 纸纹理 <image>）。
+    //    只在「第一个 <g 之前」的头部区域操作，并保护 <defs> 里的 rect（clip/mask）。
+    const gIdx = svgContent.search(/<g[\s>]/i);
+    if (gIdx > 0) {
+      let header = svgContent.slice(0, gIdx);
+      const defsBlocks = [];
+      header = header.replace(/<defs[\s\S]*?<\/defs>/gi, (m) => { defsBlocks.push(m); return `\x00DEFS${defsBlocks.length - 1}\x00`; });
+      header = header.replace(/<rect\b[^>]*(?:\/>|>(?:(?!<\/?rect\b)[\s\S])*?<\/rect>)/gi, (m) => {
+        const attr = (name) => { const mm = m.match(new RegExp(`${name}\\s*=\\s*"([^"]+)"`, 'i')); return mm ? parseFloat(mm[1]) : null; };
+        const rx = attr('x') || 0, ry = attr('y') || 0;
+        const rw = attr('width'), rh = attr('height');
+        if (rw && rh && rw >= w * 0.95 && rh >= h * 0.95 && rx <= w * 0.05 && ry <= h * 0.05) return ''; // 全幅背景，剥掉
+        return m;
+      });
+      header = header.replace(/\x00DEFS(\d+)\x00/g, (m, i) => defsBlocks[Number(i)]);
+      svgContent = header + svgContent.slice(gIdx);
+    }
+    // 2) 在 <svg ...> 开标签后注入纸面底层（先画者居底）
+    const svgOpenEnd = svgContent.indexOf('>', svgContent.search(/<svg[\s>]/i));
+    if (svgOpenEnd > 0) {
+      const paperLayer = `<rect x="0" y="0" width="${w}" height="${h}" fill="#FAF7F0"/><image href="paper_texture.jpg" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" opacity="0.9"/>`;
+      svgContent = svgContent.slice(0, svgOpenEnd + 1) + paperLayer + svgContent.slice(svgOpenEnd + 1);
+    }
+  }
+
   const pngPath = svgPath.replace(/\.svg$/i, '.png');
   const chrome = CHROME_CANDIDATES.find(p => fs.existsSync(p));
   if (chrome) {
-    await execFilePromise(chrome, [
-      '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=2',
-      `--screenshot=${pngPath}`, `--window-size=${w},${h}`, `file://${svgPath}`
-    ], { maxBuffer: 1024 * 1024 });
+    let renderTarget = `file://${svgPath}`;
+    let wrapHtmlPath = null;
+    if (hasPaper) {
+      wrapHtmlPath = svgPath.replace(/\.svg$/i, '.wrap.html');
+      const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;padding:0;width:${w}px;height:${h}px;overflow:hidden;background:#FAF7F0}
+body{background:#FAF7F0 url('file://${PAPER_TEXTURE_PATH}') center/cover no-repeat}
+#journal-map{width:${w}px;height:${h}px;filter:url(#handWobble)}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<filter id="handWobble" x="-5%" y="-5%" width="110%" height="110%">
+<feTurbulence type="fractalNoise" baseFrequency="0.012 0.017" numOctaves="2" seed="11" result="noise"/>
+<feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+</filter>
+</svg>
+<div id="journal-map">
+${svgContent}
+</div>
+</body></html>`;
+      fs.writeFileSync(wrapHtmlPath, html, 'utf-8');
+      renderTarget = `file://${wrapHtmlPath}`;
+      if (process.env.RTP_DEBUG) fs.writeFileSync(`${svgPath}.debug.svg`, svgContent, 'utf-8');
+    }
+    try {
+      await execFilePromise(chrome, [
+        '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=2',
+        `--screenshot=${pngPath}`, `--window-size=${w},${h}`, renderTarget
+      ], { maxBuffer: 1024 * 1024 });
+    } finally {
+      if (wrapHtmlPath && fs.existsSync(wrapHtmlPath)) fs.unlinkSync(wrapHtmlPath);
+    }
   } else {
     // qlmanage 应急兜底（会产生方形白边）
     await execFilePromise('qlmanage', ['-t', '-s', String(Math.max(w, h)), '-o', path.dirname(svgPath), svgPath]);

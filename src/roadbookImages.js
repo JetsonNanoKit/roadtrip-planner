@@ -132,7 +132,7 @@ async function generateRouteMapImage({ origin, destination, days, imageStyle, cu
   const landmarksStr = details.topAttractions.slice(0, 5).join(', ');
 
   // 2. 按模型类型构造提示词
-  const fullTextPrompt = `${roadbookContent || `${origin} → ${destination} ${days} 天自驾游`}\n\n${ROUTE_MAP_INSTRUCTION}。起点：${origin}，终点：${destination}，全程 ${days} 天。`;
+  const fullTextPrompt = `${roadbookContent || `${origin} → ${destination} ${days} 天自驾游`}\n\n${ROUTE_MAP_INSTRUCTION}。起点：${origin}，终点：${destination}，全程 ${days} 天。【风格要求】严格模仿所附参考图：钢笔淡彩黑色勾线、柔和水彩晕染（禁止平涂色块）、整幅米白水彩纸底色、微缩景观全景构图、顶部手绘标题横幅、深色公路线串联所有站点且每站画红色圆点、每站配景点特色小插画、站点名中文+英文双语手写标注（直接写在地图上，不要用圆角信息框）、左上角复古指北针、四周花草装饰边角；不要图例框、不要信息面板、不要现代导航 UI 风。`;
   const shortPrompt = `A hand-drawn watercolor illustrated travel route map of a ${days}-day road trip from ${origin} to ${destination}. A winding scenic highway connects key stops: ${routePointsStr}. Featuring miniature landmarks: ${landmarksStr || destination + ' scenic landmarks'}. ${ROUTE_MAP_INSTRUCTION}. Delicate black ink line art with soft watercolor washes, vintage cream paper texture, decorative compass rose, cute puffy clouds, travel journal aesthetic, high detail. ${stylePrompt}`;
   const diffusion = isDiffusionModel(imageModel);
   const prompt = diffusion ? shortPrompt : fullTextPrompt;
