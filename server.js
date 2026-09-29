@@ -26,14 +26,24 @@ const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
 
+  // 飞书能力绑定本机身份：通过隧道/域名访问的公网访客不可见、不可用，
+  // 防止他人把文档推送到服务所有者的飞书空间
+  const isLocalVisitor = (h => h.startsWith('localhost') || h.startsWith('127.0.0.1'))((req.headers.host || '').toLowerCase());
+
   // ── 1. 飞书登录状态 ──────────────────────────────────────────────
   if (pathname === '/api/status' && req.method === 'GET') {
+    if (!isLocalVisitor) {
+      return sendJSON(res, 200, { available: false, loggedIn: false, feishuHidden: true });
+    }
     const status = await getLarkStatus();
     return sendJSON(res, 200, status);
   }
 
   // ── 1.1 飞书扫码登录：发起设备授权流，返回二维码 ──────────────────
   if (pathname === '/api/feishu-qr' && req.method === 'POST') {
+    if (!isLocalVisitor) {
+      return sendJSON(res, 403, { ok: false, error: '飞书登录仅本机可用' });
+    }
     try {
       const result = await startQrLogin();
       return sendJSON(res, 200, result);
@@ -45,6 +55,9 @@ const server = http.createServer(async (req, res) => {
 
   // ── 1.2 飞书扫码登录：轮询授权结果 ───────────────────────────────
   if (pathname === '/api/feishu-qr-poll' && req.method === 'GET') {
+    if (!isLocalVisitor) {
+      return sendJSON(res, 403, { status: 'error', error: '飞书登录仅本机可用' });
+    }
     const code = parsedUrl.searchParams.get('code') || '';
     const result = await pollQrLogin(code);
     return sendJSON(res, 200, result);
@@ -323,6 +336,9 @@ const server = http.createServer(async (req, res) => {
 
   // ── 9. 同步到飞书云文档 ──────────────────────────────────────────
   if (pathname === '/api/sync-feishu' && req.method === 'POST') {
+    if (!isLocalVisitor) {
+      return sendJSON(res, 403, { ok: false, error: '飞书同步仅本机可用' });
+    }
     try {
       const body = await parseBody(req);
       const { title = '自驾路书', content = '' } = body;

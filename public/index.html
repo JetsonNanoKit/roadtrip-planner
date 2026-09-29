@@ -1407,6 +1407,13 @@
         const data = await res.json();
         const badge = document.getElementById('feishu-badge');
         const userText = document.getElementById('feishu-user-name');
+        // 公网访客（隧道/域名访问）：飞书能力整体隐藏，避免暴露或滥用所有者的飞书身份
+        if (data.feishuHidden) {
+          badge.classList.add('hidden');
+          const syncBtn = document.getElementById('sync-feishu-btn');
+          if (syncBtn) syncBtn.classList.add('hidden');
+          return;
+        }
         if (data.loggedIn) {
           userText.innerText = `飞书已连接: ${data.userName || '已授权'}`;
           badge.className = "hidden sm:flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700";
